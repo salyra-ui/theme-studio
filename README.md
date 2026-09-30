@@ -1,6 +1,6 @@
 # @sebytza23/theme-kit
 
-Composable theme generation, contexts, presets, persistence and exports for React, Svelte, Vue, Angular, Astro and vanilla HTML/PHP/htmx.
+Composable theme generation, contexts, presets, persistence and exports for React, Svelte, Vue, Angular, Astro and Vanilla.
 
 ## Install
 
@@ -15,6 +15,7 @@ Use Node 22.19 or newer.
 `npm ci`
 `npm test`
 `npm run check`
+`npm run check:docs`
 `npm run test:ssr`
 `npm run build:site`
 `npm run pack:all`
@@ -31,3 +32,9 @@ Documentation: https://sebytza23.github.io/theme-kit/docs.html
 Studio: https://sebytza23.github.io/theme-kit/generator.html
 
 Full API documentation: [packages/theme-kit/README.md](packages/theme-kit/README.md).
+
+## Interactive documentation
+
+The site has separate color picker and theme kit catalogs, inline previews, framework source selectors and copy controls. Custom examples show thumb text, control colors, sizing and classes. Theme examples include standalone, asynchronous success, failure/fallback and timeout scenarios. `check:docs` validates the generated examples; requests in the documentation preview are simulated locally.
+
+Code examples have independent React, Svelte, Vue, Angular, Astro and Vanilla tabs, separate source/style files, and local live customization. The docs explain channel units, context composition, seeded SSR, theme loading, fallback, exports and persistence.

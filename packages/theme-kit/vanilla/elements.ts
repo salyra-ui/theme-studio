@@ -223,7 +223,12 @@ class ThemePickerElement extends HTMLElement {
     if (!root) return;
     let boundStore: ThemeStore | undefined;
     const setup = () => {
-      if (!root.store || (this.cleanup && boundStore === root.store)) return;
+      if (!this.isConnected || !root.store || (this.cleanup && boundStore === root.store)) return;
+      const provider = this.querySelector<ColorProviderElement>('cp-provider[data-tk-active-color]');
+      const wheel = this.querySelector<ColorWheelElement>('[data-picker-surface="shared-wheel"] cp-wheel');
+      // Declarative HTML can connect the parent before its children are upgraded.
+      if (!provider || !wheel) return;
+      customElements.upgrade(this);
       this.cleanup?.();
       this.cleanup = undefined;
       boundStore = root.store;
@@ -231,13 +236,7 @@ class ThemePickerElement extends HTMLElement {
         root.store,
         JSON.parse(this.getAttribute('data-options') ?? '{}'),
       );
-      const provider = this.querySelector<ColorProviderElement>(
-        'cp-provider[data-tk-active-color]',
-      )!;
       provider.setStore(picker.activeColor);
-      const wheel = this.querySelector<ColorWheelElement>(
-        '[data-picker-surface="shared-wheel"] cp-wheel',
-      )!;
       const update = () => {
         const state = picker.getSnapshot();
         this.querySelector<HTMLSelectElement>('[data-picker-view]')!.value =
@@ -322,8 +321,13 @@ class ThemePickerElement extends HTMLElement {
       };
     };
     root.addEventListener('theme-change', setup);
-    this.detach = () => root.removeEventListener('theme-change', setup);
+    this.ownerDocument.addEventListener('DOMContentLoaded', setup, { once: true });
+    this.detach = () => {
+      root.removeEventListener('theme-change', setup);
+      this.ownerDocument.removeEventListener('DOMContentLoaded', setup);
+    };
     setup();
+    queueMicrotask(setup);
   }
   disconnectedCallback() {
     this.detach?.();
