@@ -2,7 +2,7 @@
 
 Theme generation and composition, depending on color-picker. Optional fetching and storage, scoped CSS, SSR-safe per-provider state, separate loading content and fallback theme.
 
-Entry points: `theme-kit`, `/react`, `/svelte`, `/vue`, `/angular`, `/astro/*.astro`, `/styles.css`.
+Core package: `@sebytza23/theme-kit`. Independent adapters: `@sebytza23/theme-kit-react`, `-svelte`, `-vue`, `-angular`, `-astro`, `-vanilla`. Each adapter exports core helpers and its own `/styles.css`. Astro components use `@sebytza23/theme-kit-astro/*.astro`.
 
 Core API: `generateTheme`, `generatePalette`, `createThemeStore`, `parseTheme`, `themeStyle`, `themeVariables`, `fromLegacyTheme`, `toLegacyTheme`, `browserStorage`.
 
@@ -31,7 +31,7 @@ Read the workspace README for SSR, client fetch, failure, custom loading, persis
 
 `ThemeLoading` and `ThemeReady` accept arbitrary children. Ready includes fallback; `ThemeError` lets you expose a retry UI. ThemeGenerator is an optional composed example; combine color-picker primitives and `store.generate(hex)` to build your own controls. Angular consumers can compose their own `<cp-provider>` and connect `(colorChange)` to the theme store. CSS stays local to the provider's DOM subtree, including nested themes. Portals/teleports outside that subtree need their own provider/style variables.
 
-Build from workspace: `npm run build`. Distribution: `packages/theme-kit/dist`, with `color-picker` as a dependency. Choose available npm scopes for both manifests and imports before publishing; no packages have been published.
+Build independent packages with `npm run build:packages`. Publishable output is under `release/`; tarballs are produced by `npm run pack:all`. The theme core depends on `@sebytza23/color-picker`, and each native adapter depends only on matching adapters and cores. No packages have been published to npm.
 
 Optional surfaces: `generateTheme(seed, {background:'tinted'})` or `store.setBackground('tinted')` adds primary tint to light/dark backgrounds. `ThemeBackground` exposes the switch; neutral is the generated default. Imported themes retain their original backgrounds until explicitly changed.
 
