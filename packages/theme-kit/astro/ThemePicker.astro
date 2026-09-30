@@ -1,0 +1,110 @@
+---
+import {
+  themePickerMarkers,
+  createThemePickerStore,
+  createThemeStore,
+  defaultTheme,
+  themePickerViews,
+  roles as allRoles,
+  type Theme,
+  type ThemePickerOptions,
+} from '../core';
+import ColorArea from '@sebytza23/color-picker-astro/ColorArea.astro';
+import ColorWheel from '@sebytza23/color-picker-astro/ColorWheel.astro';
+import ColorSlider from '@sebytza23/color-picker-astro/ColorSlider.astro';
+import ColorInput from '@sebytza23/color-picker-astro/ColorInput.astro';
+import ColorMode from '@sebytza23/color-picker-astro/ColorMode.astro';
+import ColorFormatSelect from '@sebytza23/color-picker-astro/ColorFormatSelect.astro';
+interface Props extends ThemePickerOptions {
+  theme?: Theme;
+}
+const { theme = defaultTheme, ...options } = Astro.props,
+  state = createThemePickerStore(
+    createThemeStore({ theme }),
+    options,
+  ).getSnapshot(),
+  color = state.colors[state.activeRole];
+---
+
+<tk-picker data-options={JSON.stringify(options)}>
+  <cp-provider data-tk-active-color value={color.hex}>
+    <div class="tk-picker tk-generator">
+      <label class="cp-format">
+        Theme picker view
+        <select data-picker-view>
+          {themePickerViews.map((view) => (
+            <option value={view} selected={view === state.view}>
+              {view === 'area'
+                ? 'Rectangle'
+                : view === 'wheel'
+                  ? 'Wheel'
+                  : 'Shared wheel'}
+            </option>
+          ))}
+        </select>
+      </label>
+      <fieldset class="tk-role-options">
+        <legend>Visible roles</legend>
+        {allRoles.map((role) => (
+          <label>
+            <input
+              type="checkbox"
+              data-include-role={role}
+              checked={state.roles.includes(role)}
+              disabled={state.roles.length === 1 && state.roles.includes(role)}
+            />
+            {role}
+          </label>
+        ))}
+      </fieldset>
+      <div class="tk-role-tabs" aria-label="Active color">
+        {allRoles.map((role) => (
+          <button
+            type="button"
+            data-select-role={role}
+            hidden={!state.roles.includes(role)}
+            aria-pressed={role === state.activeRole}
+          >
+            <span style={`background:${state.colors[role].hex}`}></span>
+            {role}
+          </button>
+        ))}
+      </div>
+      <div
+        data-picker-surface="shared-wheel"
+        hidden={state.view !== 'shared-wheel'}
+      >
+        <ColorWheel
+          value={color.hex}
+          class="tk-shared-wheel"
+          label="Shared theme color wheel"
+          markers={themePickerMarkers(state)}
+          activeId={state.activeRole}
+        />
+      </div>
+      <div data-picker-surface="area" hidden={state.view !== 'area'}>
+        <ColorArea value={color.hex} />
+      </div>
+      <div data-picker-surface="wheel" hidden={state.view !== 'wheel'}>
+        <ColorWheel value={color.hex} />
+      </div>
+      <p class="tk-editing" aria-live="polite">
+        Editing {state.activeRole}
+      </p>
+      <slot>
+        <div data-picker-channel="h" hidden={state.view !== 'area'}>
+          <ColorSlider value={color.h} />
+        </div>
+        <div data-picker-channel="v" hidden={state.view === 'area'}>
+          <ColorSlider channel="v" value={color.v} />
+        </div>
+        <ColorFormatSelect />
+        <ColorInput value={color.hex} />
+        <ColorMode />
+      </slot>
+    </div>
+  </cp-provider>
+</tk-picker>
+<script>
+  import './client';
+</script>

@@ -1,0 +1,11 @@
+---
+import type { Theme } from '../core';
+interface Props {
+  theme: Theme;
+}
+const { theme } = Astro.props;
+---
+
+<button type="button" data-tk-theme={JSON.stringify(theme)}>
+  <slot>{theme.name}</slot>
+</button>

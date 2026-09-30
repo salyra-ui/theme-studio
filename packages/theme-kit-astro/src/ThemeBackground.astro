@@ -1,0 +1,15 @@
+---
+interface Props {
+  checked?: boolean;
+  label?: string;
+}
+---
+
+<label class="tk-background">
+  <input
+    type="checkbox"
+    data-tk-background
+    checked={Astro.props.checked ?? false}
+  />
+  {Astro.props.label ?? 'Tint background with primary'}
+</label>

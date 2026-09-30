@@ -1,0 +1,171 @@
+/* Optional. Variables are scoped to each provider, including nested providers. */
+.tk-scope {
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+}
+.tk-generator {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+}
+.tk-palette {
+  display: flex;
+  width: 100%;
+  gap: 3px;
+  overflow: hidden;
+  border-radius: 0.6rem;
+}
+.tk-palette > div {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 0.68rem;
+}
+.tk-palette span {
+  display: block;
+  padding: 0.5rem 0;
+  opacity: 0.65;
+}
+.tk-shade {
+  height: 4.5rem;
+}
+.tk-background {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.tk-background input {
+  accent-color: hsl(var(--primary));
+}
+
+.tk-harmony {
+  display: grid;
+  gap: 0.5rem;
+}
+.tk-harmony label,
+.tk-border {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+.tk-harmony select {
+  margin-left: auto;
+  max-width: 60%;
+}
+.tk-border input {
+  width: 5rem;
+  margin-left: auto;
+}
+.tk-border input,
+.tk-harmony select {
+  color: inherit;
+  background: transparent;
+  border: 1px solid #8885;
+  border-radius: var(--border-radius-input, 0.25rem);
+  padding: 0.4rem;
+}
+
+.tk-shared-wheel {
+  max-width: 300px;
+  margin: 1rem auto;
+  isolation: isolate;
+}
+.tk-shared-wheel:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 6px;
+}
+.tk-shared-wheel .tk-wheel-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #222;
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  text-shadow: 0 1px 3px black;
+  cursor: grab;
+  touch-action: none;
+}
+.tk-shared-wheel .tk-wheel-marker[aria-pressed='true'] {
+  box-shadow:
+    0 0 0 3px #111,
+    0 0 0 5px white;
+}
+.tk-shared-wheel .tk-wheel-marker:focus-visible {
+  outline: 3px solid #111;
+  outline-offset: 4px;
+}
+.tk-role-options {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+}
+.tk-role-options legend {
+  margin-bottom: 0.5rem;
+  opacity: 0.65;
+}
+.tk-role-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.tk-role-tabs {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.tk-role-tabs button {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  text-transform: capitalize;
+  background: transparent;
+  color: inherit;
+  border: 1px solid #8885;
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.6rem;
+}
+.tk-role-tabs button[aria-pressed='true'] {
+  border-color: currentColor;
+  font-weight: 700;
+}
+.tk-role-tabs span {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid #8886;
+  border-radius: 50%;
+}
+.tk-editing {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+  opacity: 0.7;
+}
+.tk-picker [hidden] {
+  display: none !important;
+}
+
+.tk-export {
+  max-height: 24rem;
+  overflow: auto;
+  white-space: pre;
+  font-size: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #8886;
+  border-radius: 0.5rem;
+}
+
+.tk-name { display: grid; gap: .35rem; margin-block: .75rem; font-size: .85rem; }
+.tk-name input { padding: .55rem .7rem; color: inherit; background: transparent; border: 1px solid currentColor; border-radius: var(--border-radius-input, .5rem); }
+.tk-name small { opacity: .65; }

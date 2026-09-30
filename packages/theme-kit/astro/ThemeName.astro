@@ -1,0 +1,7 @@
+---
+import { defaultTheme, suggestedThemeName, type Theme } from '../core';
+interface Props { label?: string; class?: string; theme?: Theme; }
+const { label = 'Theme name', class: className, theme = defaultTheme } = Astro.props;
+const suggestion = suggestedThemeName(theme);
+---
+<slot><label class:list={['tk-name', className]}>{label}<input data-tk-name maxlength="200" value={theme.name} placeholder={suggestion} /><small data-tk-name-suggestion>Suggested: {suggestion}</small></label></slot>

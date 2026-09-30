@@ -1,0 +1,30 @@
+---
+import { harmonies, defaultTheme, type Theme } from '../core';
+interface Props {
+  theme?: Theme;
+  label?: string;
+}
+const { theme = defaultTheme, label = 'Color harmony' } = Astro.props;
+---
+
+<div class="tk-harmony">
+  <label>
+    {label}
+    <select data-tk-harmony>
+      {harmonies.map((value) => (
+        <option
+          value={value}
+          selected={(theme.harmony ?? 'analogous') === value}
+        >
+          {value}
+        </option>
+      ))}
+    </select>
+  </label>
+  <button type="button" data-tk-generate-harmony>
+    Generate accent &amp; secondary
+  </button>
+</div>
+<script>
+  import './client';
+</script>

@@ -1,0 +1,28 @@
+---
+import { defaultTheme, shades, type Theme, type Role } from '@sebytza23/theme-kit';
+interface Props {
+  theme?: Theme;
+  role?: Role;
+}
+const { theme = defaultTheme, role = 'primary' } = Astro.props;
+---
+
+<tk-palette role-name={role}>
+  <div class="tk-palette">
+    {shades.map((shade) => (
+      <div>
+        <span>{shade}</span>
+        <div
+          data-shade
+          class="tk-shade"
+          style={{
+            background: `hsl(${theme.structure.userPreset[role][shade]})`,
+          }}
+        />
+      </div>
+    ))}
+  </div>
+</tk-palette>
+<script>
+  import './client';
+</script>

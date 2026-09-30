@@ -1,0 +1,11 @@
+---
+import ThemeBorder from './ThemeBorder.astro';
+import type { Theme, Target } from '@sebytza23/theme-kit';
+interface Props {
+  theme?: Theme;
+  target?: Target;
+  label?: string;
+}
+---
+
+<ThemeBorder {...Astro.props} kind="width" />

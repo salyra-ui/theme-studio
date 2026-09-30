@@ -1,0 +1,37 @@
+---
+import {
+  defaultTheme,
+  type Theme,
+  type Target,
+  type BorderKind,
+} from '../core';
+interface Props {
+  theme?: Theme;
+  kind?: BorderKind;
+  target?: Target;
+  label?: string;
+}
+const {
+  theme = defaultTheme,
+  kind = 'width',
+  target = 'DEFAULT',
+  label = `${target} border ${kind}`,
+} = Astro.props;
+---
+
+<label class="tk-border">
+  {label}
+  <input
+    type="number"
+    min="0"
+    max="1000"
+    step={kind === 'width' ? 1 : 0.125}
+    value={theme.structure.websitePreset.border[kind][target]}
+    data-tk-border={kind}
+    data-target={target}
+  />
+  {kind === 'width' ? 'px' : 'rem'}
+</label>
+<script>
+  import './client';
+</script>

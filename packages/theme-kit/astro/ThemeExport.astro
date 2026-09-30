@@ -1,0 +1,45 @@
+---
+import {
+  themeConfiguration,
+  createThemeStore,
+  type Theme,
+  type Mode,
+  type ThemeExportFormat,
+  type TokenSelection,
+} from '../core';
+interface Props {
+  theme?: Theme;
+  mode?: Mode;
+  format?: ThemeExportFormat;
+  selection?: TokenSelection;
+  class?: string;
+}
+const {
+    theme,
+    mode,
+    format = 'json',
+    selection,
+    class: className = '',
+  } = Astro.props,
+  configuration = themeConfiguration(
+    createThemeStore({ theme, mode }).getSnapshot(),
+    selection,
+  );
+---
+
+<tk-export
+  format={format}
+  data-selection={selection ? JSON.stringify(selection) : undefined}
+>
+  {Astro.slots.has('default') ? (
+    <slot />
+  ) : (
+    <pre
+      class:list={['tk-export', className]}
+      aria-label="Theme configuration"
+    >{configuration[format]}</pre>
+  )}
+</tk-export>
+<script>
+  import './client';
+</script>

@@ -1,0 +1,8 @@
+---
+import type { ModePreference } from '../core';
+interface Props { value?: ModePreference; labels?: Record<ModePreference, string>; class?: string; }
+const { value, labels = { system: 'System', light: 'Light mode', dark: 'Dark mode' }, class: className } = Astro.props;
+---
+<button type="button" class={className} data-tk-mode={value ?? ''} data-mode-labels={JSON.stringify(labels)}>
+  <slot><span data-mode-label>{labels[value ?? 'system']}</span></slot>
+</button>

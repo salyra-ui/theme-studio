@@ -1,0 +1,36 @@
+---
+import { themeList, selectedThemeId, defaultTheme, type Theme } from '@sebytza23/theme-kit';
+interface Props {
+  themes: readonly Theme[];
+  theme?: Theme;
+  label?: string;
+  class?: string;
+}
+const {
+    themes,
+    theme = defaultTheme,
+    label = 'Saved themes',
+    class: className = '',
+  } = Astro.props,
+  list = themeList(themes),
+  value = selectedThemeId(theme, list) ?? '';
+---
+
+<tk-select data-themes={JSON.stringify(list)}>
+  <label class:list={['cp-format', 'tk-select', className]}>
+    {label}
+    <select disabled={!list.length}>
+      <option value="" disabled selected={!value}>
+        {list.length ? 'Custom theme' : 'No themes available'}
+      </option>
+      {list.map((theme) => (
+        <option value={theme.id} selected={value === theme.id}>
+          {theme.name}
+        </option>
+      ))}
+    </select>
+  </label>
+</tk-select>
+<script>
+  import './client';
+</script>

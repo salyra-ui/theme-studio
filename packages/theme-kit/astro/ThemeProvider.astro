@@ -1,0 +1,52 @@
+---
+import { createThemeStore, type ThemeOptions } from '../core';
+import { scopeStyle } from './style';
+interface Props extends Omit<ThemeOptions, 'loadTheme' | 'storage' | 'modeStorage'> {
+  src?: string;
+  storageKey?: string;
+  modeStorageKey?: string;
+  modeStorage?: false;
+  class?: string;
+}
+const { class: className = '', src, storageKey, modeStorageKey, ...options } = Astro.props;
+// The function is only a loading-state marker on the server; fetch starts in the browser.
+const state = createThemeStore({
+  ...options,
+  loadTheme: src ? () => undefined : undefined,
+  storage: storageKey ? { read: () => null, write: () => {} } : undefined,
+}).getSnapshot();
+---
+
+<tk-provider
+  class:list={['tk-scope', className]}
+  data-config={JSON.stringify({ ...options, src, storageKey, modeStorageKey })}
+  data-theme={state.theme.id}
+  data-mode={state.mode}
+  data-mode-preference={state.modePreference}
+  data-theme-status={state.status}
+  style={scopeStyle(state)}
+>
+  <slot />
+</tk-provider>
+<script>
+  import './client';
+</script>
+<style is:global>
+  tk-provider,
+  tk-palette,
+  cp-provider,
+  cp-area,
+  cp-slider,
+  cp-input {
+    display: block;
+  }
+  tk-loading {
+    display: var(--tk-loading-display, none);
+  }
+  tk-error {
+    display: var(--tk-error-display, none);
+  }
+  tk-ready {
+    display: var(--tk-ready-display, contents);
+  }
+</style>

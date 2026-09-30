@@ -1,0 +1,36 @@
+---
+import { channelsToHex } from '@sebytza23/color-picker';
+import ColorSurface from '@sebytza23/color-picker-astro/ColorSurface.astro';
+import ColorViewSelect from '@sebytza23/color-picker-astro/ColorViewSelect.astro';
+import ColorMode from '@sebytza23/color-picker-astro/ColorMode.astro';
+import ColorFormatSelect from '@sebytza23/color-picker-astro/ColorFormatSelect.astro';
+import ColorInput from '@sebytza23/color-picker-astro/ColorInput.astro';
+import { defaultTheme, type Theme, type Role } from '@sebytza23/theme-kit';
+interface Props {
+  theme?: Theme;
+  role?: Role;
+  wheel?: boolean;
+}
+const { theme = defaultTheme, role = 'primary', wheel = false } = Astro.props;
+const value = channelsToHex(theme.structure.userPreset[role].DEFAULT);
+---
+
+<cp-provider
+  view={wheel ? 'wheel' : 'area'}
+  value={value}
+  data-theme-generator
+  data-role={role}
+>
+  <div class="tk-generator">
+    <slot>
+      <ColorViewSelect />
+      <ColorSurface value={value} view={wheel ? 'wheel' : 'area'} />
+      <ColorFormatSelect />
+      <ColorInput value={value} />
+      <ColorMode />
+    </slot>
+  </div>
+</cp-provider>
+<script>
+  import './client';
+</script>
