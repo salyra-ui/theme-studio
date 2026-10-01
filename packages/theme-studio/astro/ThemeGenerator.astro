@@ -1,0 +1,38 @@
+---
+import { channelsToHex } from '@salyra-ui/color-picker';
+import ColorSurface from '@salyra-ui/color-picker/astro/ColorSurface.astro';
+import ColorViewSelect from '@salyra-ui/color-picker/astro/ColorViewSelect.astro';
+import ColorMode from '@salyra-ui/color-picker/astro/ColorMode.astro';
+import ColorFormatSelect from '@salyra-ui/color-picker/astro/ColorFormatSelect.astro';
+import ColorInput from '@salyra-ui/color-picker/astro/ColorInput.astro';
+import { defaultTheme, type Theme, type Role } from '../core';
+interface Props {
+  disabled?: boolean;
+  theme?: Theme;
+  role?: Role;
+  wheel?: boolean;
+}
+const { theme = defaultTheme, role = 'primary', wheel = false } = Astro.props;
+const value = channelsToHex(theme.structure.userPreset[role].DEFAULT);
+---
+
+<cp-provider
+  view={wheel ? 'wheel' : 'area'}
+  value={value}
+  disabled={Astro.props.disabled}
+  data-theme-generator
+  data-role={role}
+>
+  <div class="tk-generator">
+    <slot>
+      <ColorViewSelect />
+      <ColorSurface value={value} view={wheel ? 'wheel' : 'area'} />
+      <ColorFormatSelect />
+      <ColorInput value={value} />
+      <ColorMode />
+    </slot>
+  </div>
+</cp-provider>
+<script>
+  import './client';
+</script>

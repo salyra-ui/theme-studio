@@ -1,0 +1,62 @@
+{
+  "name": "@salyra-ui/theme-studio",
+  "version": "0.2.0",
+  "type": "module",
+  "private": true,
+  "sideEffects": [
+    "**/*.css",
+    "**/astro/client.*",
+    "**/vanilla/*"
+  ],
+  "exports": {
+    ".": "./core/index.ts",
+    "./react": "./react/index.tsx",
+    "./svelte": "./svelte/index.ts",
+    "./vue": "./vue/index.ts",
+    "./angular": "./angular/index.ts",
+    "./astro/*": "./astro/*",
+    "./styles.css": "./styles.css",
+    "./astro/client": "./astro/client.ts",
+    "./vanilla": "./vanilla/index.ts",
+    "./browser/*": "./browser/*",
+    "./astro": "./astro/client.ts",
+    "./styles.min.css": "./styles.css",
+    "./styles.standard.css": "./styles.css"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "react": ">=18",
+    "svelte": ">=5",
+    "vue": ">=3.5",
+    "@angular/core": ">=19",
+    "@angular/common": ">=19",
+    "astro": ">=5"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "svelte": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    },
+    "@angular/core": {
+      "optional": true
+    },
+    "@angular/common": {
+      "optional": true
+    },
+    "astro": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@salyra-ui/color-picker": "0.2.0"
+  },
+  "homepage": "https://salyra-ui.github.io/theme-studio/docs.html?kit=theme-studio"
+}
