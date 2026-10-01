@@ -157,3 +157,9 @@ The vanilla package exposes `mountThemeKit(host, options)`, returning `{element,
 Pass `disabled: true` when creating the theme store or call `store.setDisabled(true)`. The provider blocks editing and keeps the current values visible. Programmatic updates remain available. Use a provider scoped to the editor if the rest of the application should stay interactive.
 
 A selection can contain `roles`, `radius`, `width`, `background` and `modes`. Radius and width targets are independent. With no `modes`, background JSON includes the resolved active mode. Set `modes: ['light', 'dark']` to include both. Selected JSON is a partial theme, so merge it with an existing theme before passing it to a full-theme loader or storage adapter.
+
+## Production files
+
+JavaScript runtime bundles and CSS are minified. The `styles.css` export loads `styles.min.css`, so existing imports work. Svelte, Vue and Astro retain their compiler inputs and type syntax with compact scripts. Declaration files remain readable. No sourcemaps are included.
+
+Vanilla includes readable and minified browser bundles, `browser/theme-kit.js` and `browser/theme-kit.min.js`. The default ESM entry is minified. Import `/standard` for the readable ESM entry, or `/styles.standard.css` for readable CSS.
