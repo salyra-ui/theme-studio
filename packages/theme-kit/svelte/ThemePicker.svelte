@@ -50,7 +50,10 @@
 
 <ColorProvider store={picker.activeColor}
   ><div class="tk-picker tk-generator">
-    <label class="cp-format"
+    <label
+      class="cp-format"
+      hidden={options.controls === false ||
+        (options.controls === undefined && options.roles?.length === 1)}
       >Theme picker view<select
         value={$state.view}
         onchange={(e) =>
@@ -64,7 +67,11 @@
           >{/each}</select
       ></label
     >
-    <fieldset class="tk-role-options">
+    <fieldset
+      class="tk-role-options"
+      hidden={options.controls === false ||
+        (options.controls === undefined && options.roles?.length === 1)}
+    >
       <legend>Visible roles</legend>{#each allRoles as role}<label
           ><input
             type="checkbox"
@@ -74,7 +81,11 @@
           />{role}</label
         >{/each}
     </fieldset>
-    <div class="tk-role-tabs" aria-label="Active color">
+    <div
+      class="tk-role-tabs"
+      aria-label="Active color"
+      hidden={$state.roles.length === 1}
+    >
       {#each $state.roles as role}<button
           type="button"
           aria-pressed={$state.activeRole === role}

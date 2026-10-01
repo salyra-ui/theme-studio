@@ -17,6 +17,7 @@
   let {
     role = 'primary',
     wheel = false,
+    disabled = false,
     children,
     class: className = '',
   }: {
@@ -24,12 +25,18 @@
     class?: string;
     role?: Role;
     wheel?: boolean;
+    disabled?: boolean;
   } = $props();
   const theme = useTheme(),
     store = useThemeStore();
+  $effect(() => {
+    const fields = store.registerFields({ roles: [role] });
+    return fields.destroy;
+  });
 </script>
 
 <ColorProvider
+  disabled={disabled || $theme.disabled}
   view={wheel ? 'wheel' : 'area'}
   value={channelsToHex($theme.theme.structure.userPreset[role].DEFAULT)}
   onChange={(hex) => store.setColor(role, hex)}

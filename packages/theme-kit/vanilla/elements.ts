@@ -46,34 +46,139 @@ export class ThemeProviderElement extends HTMLElement {
     if (this.cleanup) return;
     const { src, storageKey, modeStorageKey, ...serialized } = JSON.parse(
       this.getAttribute('data-config') ?? '{}',
-    ) as ThemeOptions & { src?: string; storageKey?: string; modeStorageKey?: string };
+    ) as ThemeOptions & {
+      src?: string;
+      storageKey?: string;
+      modeStorageKey?: string;
+    };
     const options: ThemeOptions = { ...serialized, ...this.options };
     if (src) options.loadTheme = createHttpThemeLoader(src);
     if (storageKey) options.storage = browserStorage(storageKey);
-    if (modeStorageKey && options.modeStorage !== false) options.modeStorage = browserModeStorage(modeStorageKey);
+    if (modeStorageKey && options.modeStorage !== false)
+      options.modeStorage = browserModeStorage(modeStorageKey);
     this.store ??= createThemeStore(options);
     const store = this.store;
+    const syncSelection = () => {
+      if (options.selection) return;
+      const own = (selector: string) =>
+        [...this.querySelectorAll<HTMLElement>(selector)].filter(
+          (el) => el.closest('tk-provider') === this,
+        );
+      const pickers = own('tk-picker');
+      const generators = own('cp-provider[data-theme-generator]');
+      const fields = own('[data-tk-border]');
+      const background = own('[data-tk-background]').length > 0;
+      if (
+        !pickers.length &&
+        !generators.length &&
+        !fields.length &&
+        !background
+      )
+        return;
+      const roles = new Set<Role>(
+        generators.map((el) => (el.dataset.role ?? 'primary') as Role),
+      );
+      for (const picker of pickers) {
+        const checked = [
+          ...picker.querySelectorAll<HTMLInputElement>(
+            '[data-include-role]:checked',
+          ),
+        ];
+        const configured =
+          JSON.parse(picker.dataset.selectedRoles ?? 'null') ??
+          JSON.parse(picker.dataset.options ?? '{}').roles;
+        for (const role of configured ??
+          (checked.length
+            ? checked.map((el) => el.dataset.includeRole)
+            : ['primary', 'secondary', 'accent']))
+          roles.add(role as Role);
+      }
+      store.setSelection({
+        roles: [...roles],
+        radius: fields
+          .filter((el) => el.dataset.tkBorder === 'radius')
+          .map((el) => el.dataset.target as Target),
+        width: fields
+          .filter((el) => el.dataset.tkBorder === 'width')
+          .map((el) => el.dataset.target as Target),
+        background,
+      });
+    };
+    const observer = new this.ownerDocument.defaultView!.MutationObserver(
+      syncSelection,
+    );
+    observer.observe(this, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: [
+        'disabled',
+        'data-options',
+        'data-role',
+        'data-target',
+        'data-tk-border',
+        'data-selected-roles',
+      ],
+    });
     const update = () => {
       const state = store.getSnapshot();
       this.style.cssText = scopeStyle(state);
+      this.toggleAttribute('inert', state.disabled);
+      this.setAttribute('aria-disabled', String(state.disabled));
+      this.dataset.disabled = String(state.disabled);
+      this.querySelectorAll<
+        HTMLInputElement | HTMLSelectElement | HTMLButtonElement
+      >('input, select, button').forEach((control) => {
+        if (control.closest('tk-provider') !== this) return;
+        if (state.disabled) {
+          if (!control.disabled) {
+            control.dataset.tkDisabled = '';
+            control.disabled = true;
+          }
+        } else if (control.hasAttribute('data-tk-disabled')) {
+          control.disabled = false;
+          delete control.dataset.tkDisabled;
+        }
+      });
+      this.querySelectorAll<ColorProviderElement>(
+        'cp-provider[data-theme-generator]',
+      ).forEach((provider) => {
+        if (provider.closest('tk-provider') === this)
+          provider.store?.setDisabled(
+            state.disabled || provider.hasAttribute('disabled'),
+          );
+      });
       this.dataset.theme = state.theme.id;
       this.dataset.mode = state.mode;
       this.dataset.modePreference = state.modePreference;
       this.querySelectorAll<HTMLElement>('[data-tk-mode]').forEach((button) => {
         if (button.closest('tk-provider') !== this) return;
         const value = button.dataset.tkMode;
-        if (isModePreference(value)) button.setAttribute('aria-pressed', String(value === state.modePreference));
+        if (isModePreference(value))
+          button.setAttribute(
+            'aria-pressed',
+            String(value === state.modePreference),
+          );
         const label = button.querySelector('[data-mode-label]');
-        if (label) label.textContent = JSON.parse(button.dataset.modeLabels ?? '{}')[value || state.modePreference];
+        if (label)
+          label.textContent = JSON.parse(button.dataset.modeLabels ?? '{}')[
+            value || state.modePreference
+          ];
       });
-      this.querySelectorAll<HTMLInputElement>('[data-tk-name]').forEach((input) => {
-        if (input.closest('tk-provider') !== this) return;
-        if (input.ownerDocument.activeElement !== input) input.value = state.theme.name;
-        input.placeholder = suggestedThemeName(state.theme);
-      });
-      this.querySelectorAll<HTMLElement>('[data-tk-name-suggestion]').forEach((element) => {
-        if (element.closest('tk-provider') === this) element.textContent = `Suggested: ${suggestedThemeName(state.theme)}`;
-      });
+      this.querySelectorAll<HTMLInputElement>('[data-tk-name]').forEach(
+        (input) => {
+          if (input.closest('tk-provider') !== this) return;
+          if (input.ownerDocument.activeElement !== input)
+            input.value = state.theme.name;
+          input.placeholder = suggestedThemeName(state.theme);
+        },
+      );
+      this.querySelectorAll<HTMLElement>('[data-tk-name-suggestion]').forEach(
+        (element) => {
+          if (element.closest('tk-provider') === this)
+            element.textContent = `Suggested: ${suggestedThemeName(state.theme)}`;
+        },
+      );
       this.dataset.themeStatus = state.status;
       for (const provider of this.querySelectorAll<ColorProviderElement>(
         'cp-provider[data-theme-generator]',
@@ -129,18 +234,24 @@ export class ThemeProviderElement extends HTMLElement {
       }
     };
     const click = (event: Event) => {
+      if (store.getSnapshot().disabled) return;
       const button = (event.target as HTMLElement).closest<HTMLElement>(
         '[data-tk-mode],[data-tk-retry],[data-tk-theme],[data-tk-generate-harmony]',
       );
       if (button?.closest('tk-provider') !== this) return;
       if (button.hasAttribute('data-tk-mode'))
-        store.setMode(isModePreference(button.dataset.tkMode) ? button.dataset.tkMode : nextThemeMode(store.getSnapshot().modePreference));
+        store.setMode(
+          isModePreference(button.dataset.tkMode)
+            ? button.dataset.tkMode
+            : nextThemeMode(store.getSnapshot().modePreference),
+        );
       else if (button.hasAttribute('data-tk-retry')) void store.reload();
       else if (button.hasAttribute('data-tk-generate-harmony'))
         store.generateHarmony();
       else store.setTheme(JSON.parse(button.getAttribute('data-tk-theme')!));
     };
     const background = (event: Event) => {
+      if (store.getSnapshot().disabled) return;
       const input = event.target as HTMLInputElement;
       if (
         input.matches('[data-tk-background]') &&
@@ -149,9 +260,13 @@ export class ThemeProviderElement extends HTMLElement {
         store.setBackground(input.checked ? 'tinted' : 'neutral');
     };
     const edit = (event: Event) => {
+      if (store.getSnapshot().disabled) return;
       const input = event.target as HTMLInputElement;
       if (input.closest('tk-provider') !== this) return;
-      if (input.matches('[data-tk-name]')) store.setName(event.type === 'change' && !input.value ? undefined : input.value);
+      if (input.matches('[data-tk-name]'))
+        store.setName(
+          event.type === 'change' && !input.value ? undefined : input.value,
+        );
       if (input.matches('[data-tk-harmony]'))
         store.setHarmony(input.value as Harmony);
       if (input.matches('[data-tk-border]')) {
@@ -164,6 +279,8 @@ export class ThemeProviderElement extends HTMLElement {
           );
       }
     };
+    this.addEventListener('change', syncSelection);
+    syncSelection();
     this.addEventListener('change', edit);
     this.addEventListener('input', edit);
     this.addEventListener('change', background);
@@ -173,6 +290,8 @@ export class ThemeProviderElement extends HTMLElement {
     const unsubscribe = store.subscribe(update),
       unmount = mountThemeStore(store, options.storage, options);
     this.cleanup = () => {
+      observer.disconnect();
+      this.removeEventListener('change', syncSelection);
       unsubscribe();
       unmount();
       this.removeEventListener('change', edit);
@@ -198,7 +317,7 @@ class ThemePaletteElement extends HTMLElement {
       const palette = root.store.getSnapshot().theme.structure.userPreset[role];
       this.querySelectorAll<HTMLElement>('[data-shade]').forEach(
         (element, i) => {
-          element.style.background = `hsl(${palette[shades[i]]})`;
+          element.style.background = `hsl(${palette[(element.dataset.shade ? Number(element.dataset.shade) : shades[i]) as (typeof shades)[number]]})`;
         },
       );
     };
@@ -223,22 +342,48 @@ class ThemePickerElement extends HTMLElement {
     if (!root) return;
     let boundStore: ThemeStore | undefined;
     const setup = () => {
-      if (!this.isConnected || !root.store || (this.cleanup && boundStore === root.store)) return;
-      const provider = this.querySelector<ColorProviderElement>('cp-provider[data-tk-active-color]');
-      const wheel = this.querySelector<ColorWheelElement>('[data-picker-surface="shared-wheel"] cp-wheel');
+      if (
+        !this.isConnected ||
+        !root.store ||
+        (this.cleanup && boundStore === root.store)
+      )
+        return;
+      const provider = this.querySelector<ColorProviderElement>(
+        'cp-provider[data-tk-active-color]',
+      );
+      const wheel = this.querySelector<ColorWheelElement>(
+        '[data-picker-surface="shared-wheel"] cp-wheel',
+      );
       // Declarative HTML can connect the parent before its children are upgraded.
       if (!provider || !wheel) return;
       customElements.upgrade(this);
       this.cleanup?.();
       this.cleanup = undefined;
       boundStore = root.store;
-      const picker = createThemePickerStore(
-        root.store,
-        JSON.parse(this.getAttribute('data-options') ?? '{}'),
+      const pickerOptions = JSON.parse(
+        this.getAttribute('data-options') ?? '{}',
+      );
+      const picker = createThemePickerStore(root.store, pickerOptions);
+      const fixed =
+        pickerOptions.controls === false ||
+        (pickerOptions.controls === undefined &&
+          pickerOptions.roles?.length === 1);
+      this.querySelector<HTMLElement>('[data-picker-view]')
+        ?.closest('label')
+        ?.toggleAttribute('hidden', fixed);
+      this.querySelector<HTMLElement>('.tk-role-options')?.toggleAttribute(
+        'hidden',
+        fixed,
       );
       provider.setStore(picker.activeColor);
       const update = () => {
         const state = picker.getSnapshot();
+        if (this.dataset.selectedRoles !== JSON.stringify(state.roles))
+          this.dataset.selectedRoles = JSON.stringify(state.roles);
+        this.querySelector<HTMLElement>('.tk-role-tabs')?.toggleAttribute(
+          'hidden',
+          state.roles.length === 1,
+        );
         this.querySelector<HTMLSelectElement>('[data-picker-view]')!.value =
           state.view;
         this.querySelectorAll<HTMLElement>('[data-picker-surface]').forEach(
@@ -317,11 +462,12 @@ class ThemePickerElement extends HTMLElement {
         wheel.removeEventListener('marker-change', markerChange);
         this.removeEventListener('change', change);
         this.removeEventListener('click', click);
-
       };
     };
     root.addEventListener('theme-change', setup);
-    this.ownerDocument.addEventListener('DOMContentLoaded', setup, { once: true });
+    this.ownerDocument.addEventListener('DOMContentLoaded', setup, {
+      once: true,
+    });
     this.detach = () => {
       root.removeEventListener('theme-change', setup);
       this.ownerDocument.removeEventListener('DOMContentLoaded', setup);
@@ -387,7 +533,7 @@ export class ThemeExportElement extends HTMLElement {
           : undefined;
       const next = themeConfiguration(state, selection);
       if (
-        this.configuration?.theme === next.theme &&
+        this.configuration === next &&
         this.configuration.mode === next.mode &&
         this.configuration.modePreference === next.modePreference &&
         this.configuration.systemMode === next.systemMode

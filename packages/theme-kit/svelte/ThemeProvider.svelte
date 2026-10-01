@@ -27,11 +27,19 @@
 
 <div
   class="tk-scope {className}"
+  data-disabled={$theme.disabled}
   data-theme={$theme.theme.id}
   data-mode={$theme.mode}
   data-mode-preference={$theme.modePreference}
   data-theme-status={$theme.status}
   style={$theme.style}
 >
-  {@render children()}
+  <fieldset
+    class="tk-provider-controls"
+    disabled={$theme.disabled}
+    inert={$theme.disabled}
+    aria-disabled={$theme.disabled}
+  >
+    {@render children()}
+  </fieldset>
 </div>

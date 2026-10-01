@@ -13,6 +13,10 @@
     if (Number.isFinite(n) && n >= 0 && n <= 1000)
       store.setBorder(kind, target, n);
   }
+  $effect(() => {
+    const fields = store.registerFields({ roles: [], [kind]: [target] });
+    return fields.destroy;
+  });
 </script>
 
 <label class="tk-border"

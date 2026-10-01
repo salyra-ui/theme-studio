@@ -60,6 +60,9 @@ import {
   type ThemeStore,
   type Theme,
   type Role,
+  type PaletteOptions,
+  type PaletteClasses,
+  type Shade,
 } from '../core';
 @Injectable()
 export class ThemeContext {
@@ -80,6 +83,9 @@ export class ThemeContext {
     reload: () => this.current.reload(),
     stop: () => this.current.stop(),
     setTheme: (theme) => this.current.setTheme(theme),
+    registerFields: (selection) => this.current.registerFields(selection),
+    setDisabled: (disabled) => this.current.setDisabled(disabled),
+    setSelection: (selection) => this.current.setSelection(selection),
     setBackground: (mode) => this.current.setBackground(mode),
     setMode: (mode) => this.current.setMode(mode),
     setSystemMode: (mode) => this.current.setSystemMode(mode),
@@ -118,13 +124,21 @@ export function useTheme() {
   providers: [ThemeContext],
   template: `<div
     class="tk-scope"
+    [attr.data-disabled]="state().disabled"
     [attr.data-theme]="state().theme.id"
     [attr.data-mode]="state().mode"
     [attr.data-mode-preference]="state().modePreference"
     [attr.data-theme-status]="state().status"
     [style]="state().style"
   >
-    <ng-content />
+    <fieldset
+      class="tk-provider-controls"
+      [disabled]="state().disabled"
+      [attr.inert]="state().disabled ? '' : null"
+      [attr.aria-disabled]="state().disabled"
+    >
+      <ng-content />
+    </fieldset>
   </div>`,
 })
 export class ThemeProvider implements OnInit {
@@ -201,26 +215,68 @@ export class ThemeSwatch {
   readonly store = useThemeStore();
 }
 export function useThemeMode() {
-  const store = useThemeStore(), state = useTheme();
-  return { preference: computed(() => state().modePreference), resolvedMode: computed(() => state().mode), ...themeModeActions(store) };
+  const store = useThemeStore(),
+    state = useTheme();
+  return {
+    preference: computed(() => state().modePreference),
+    resolvedMode: computed(() => state().mode),
+    ...themeModeActions(store),
+  };
 }
 @Component({
-  selector: 'tk-mode', standalone: true, imports: [NgTemplateOutlet],
-  template: `<button type="button" [attr.aria-pressed]="value ? mode.preference() === value : null" (click)="value ? mode.setMode(value) : mode.cycle()">
-    @if (content) { <ng-container [ngTemplateOutlet]="content" [ngTemplateOutletContext]="{ $implicit: mode }" /> }
-    @else { {{ labels[value ?? mode.preference()] }} }
+  selector: 'tk-mode',
+  standalone: true,
+  imports: [NgTemplateOutlet],
+  template: `<button
+    type="button"
+    [attr.aria-pressed]="value ? mode.preference() === value : null"
+    (click)="value ? mode.setMode(value) : mode.cycle()"
+  >
+    @if (content) {
+      <ng-container
+        [ngTemplateOutlet]="content"
+        [ngTemplateOutletContext]="{ $implicit: mode }"
+      />
+    } @else {
+      {{ labels[value ?? mode.preference()] }}
+    }
   </button>`,
 })
 export class ThemeMode {
   @Input() value?: ModePreference;
-  @Input() labels: Record<ModePreference, string> = { system: 'System', light: 'Light mode', dark: 'Dark mode' };
+  @Input() labels: Record<ModePreference, string> = {
+    system: 'System',
+    light: 'Light mode',
+    dark: 'Dark mode',
+  };
   @ContentChild(TemplateRef) content?: TemplateRef<unknown>;
   readonly mode = useThemeMode();
 }
 @Component({
-  selector: 'tk-name', standalone: true, imports: [NgTemplateOutlet],
-  template: `@if (content) { <ng-container [ngTemplateOutlet]="content" [ngTemplateOutletContext]="{ name: state().theme.name, suggestedName: suggestion(), setName: store.setName }" /> }
-  @else { <label class="tk-name">{{ label }}<input maxlength="200" [value]="state().theme.name" [placeholder]="suggestion()" (blur)="!$any($event.target).value && store.setName()" (input)="store.setName($any($event.target).value)" /><small>Suggested: {{ suggestion() }}</small></label> }`,
+  selector: 'tk-name',
+  standalone: true,
+  imports: [NgTemplateOutlet],
+  template: `@if (content) {
+      <ng-container
+        [ngTemplateOutlet]="content"
+        [ngTemplateOutletContext]="{
+          name: state().theme.name,
+          suggestedName: suggestion(),
+          setName: store.setName,
+        }"
+      />
+    } @else {
+      <label class="tk-name"
+        >{{ label
+        }}<input
+          maxlength="200"
+          [value]="state().theme.name"
+          [placeholder]="suggestion()"
+          (blur)="!$any($event.target).value && store.setName()"
+          (input)="store.setName($any($event.target).value)"
+        /><small>Suggested: {{ suggestion() }}</small></label
+      >
+    }`,
 })
 export class ThemeName {
   @Input() label = 'Theme name';
@@ -232,12 +288,22 @@ export class ThemeName {
 @Component({
   selector: 'tk-palette',
   standalone: true,
-  template: `<div class="tk-palette">
+  template: `<div
+    [class]="'tk-palette ' + (classes.root ?? '')"
+    [attr.data-shape]="shape"
+    [attr.aria-label]="role + ' shades'"
+  >
     @for (shade of shades; track shade) {
-      <div>
-        <span>{{ shade }}</span>
+      <div
+        data-palette-part="item"
+        [class]="(classes.item ?? '') + ' ' + (shadeClasses[shade] ?? '')"
+      >
+        <span data-palette-part="label" [class]="classes.label">{{
+          labels[shade] ?? shade
+        }}</span>
         <div
-          class="tk-shade"
+          data-palette-part="swatch"
+          [class]="'tk-shade ' + (classes.swatch ?? '')"
           [style.background]="
             'hsl(' + state().theme.structure.userPreset[role][shade] + ')'
           "
@@ -248,6 +314,10 @@ export class ThemeName {
 })
 export class ThemePalette {
   @Input() role: Role = 'primary';
+  @Input() shape: PaletteOptions['shape'] = 'square';
+  @Input() classes: PaletteClasses = {};
+  @Input() labels: Partial<Record<Shade, string>> = {};
+  @Input() shadeClasses: Partial<Record<Shade, string>> = {};
   readonly shades = shades;
   readonly state = useTheme();
 }
@@ -263,6 +333,7 @@ export class ThemePalette {
     ColorFormatSelect,
   ],
   template: `<cp-provider
+    [disabled]="disabled || state().disabled"
     [view]="wheel ? 'wheel' : 'area'"
     [value]="seed()"
     (colorChange)="store.setColor(role, $event)"
@@ -276,6 +347,19 @@ export class ThemePalette {
   ></cp-provider>`,
 })
 export class ThemeGenerator {
+  ngOnChanges() {
+    this.registration?.update({ roles: [this.role] });
+  }
+  private registration?: import('../core').ThemeFieldRegistration;
+  constructor() {
+    afterRenderEffect(() => {
+      const selection = { roles: [this.role] };
+      if (this.registration) this.registration.update(selection);
+      else this.registration = this.store.registerFields(selection);
+    });
+    inject(DestroyRef).onDestroy(() => this.registration?.destroy());
+  }
+  @Input() disabled = false;
   @Input() role: Role = 'primary';
   @Input() wheel = false;
   @Input() custom = false;
@@ -299,6 +383,18 @@ export class ThemeGenerator {
   >`,
 })
 export class ThemeBackground {
+  ngOnChanges() {
+    this.registration?.update({ roles: [], background: true });
+  }
+  private registration?: import('../core').ThemeFieldRegistration;
+  constructor() {
+    afterRenderEffect(() => {
+      const selection = { roles: [], background: true };
+      if (this.registration) this.registration.update(selection);
+      else this.registration = this.store.registerFields(selection);
+    });
+    inject(DestroyRef).onDestroy(() => this.registration?.destroy());
+  }
   @Input() label = 'Tint background with primary';
   readonly state = useTheme();
   readonly store = useThemeStore();
@@ -365,6 +461,18 @@ export class ThemeHarmony {
   >`,
 })
 export class ThemeBorder {
+  ngOnChanges() {
+    this.registration?.update({ roles: [], [this.kind]: [this.target] });
+  }
+  private registration?: import('../core').ThemeFieldRegistration;
+  constructor() {
+    afterRenderEffect(() => {
+      const selection = { roles: [], [this.kind]: [this.target] };
+      if (this.registration) this.registration.update(selection);
+      else this.registration = this.store.registerFields(selection);
+    });
+    inject(DestroyRef).onDestroy(() => this.registration?.destroy());
+  }
   @Input() kind: BorderKind = 'width';
   @Input() target: Target = 'DEFAULT';
   @Input() label = '';
@@ -428,7 +536,10 @@ export class ThemeWheel implements OnInit {
   select(id: string) {
     this.picker.selectRole(id as Role);
   }
-  change(event: { id: string; hsv: Partial<import('@sebytza23/color-picker').HSV> }) {
+  change(event: {
+    id: string;
+    hsv: Partial<import('@sebytza23/color-picker').HSV>;
+  }) {
     this.picker.setHSV(event.id as Role, event.hsv);
   }
 }
@@ -448,7 +559,11 @@ export class ThemeWheel implements OnInit {
   template: `@if (state(); as s) {
     <cp-provider [store]="picker.activeColor"
       ><div class="tk-picker tk-generator">
-        <label class="cp-format"
+        <label
+          class="cp-format"
+          [hidden]="
+            controls === false || (controls === undefined && roles.length === 1)
+          "
           >Theme picker view<select #viewSelect (change)="changeView($event)">
             @for (view of views; track view) {
               <option
@@ -466,7 +581,12 @@ export class ThemeWheel implements OnInit {
             }
           </select></label
         >
-        <fieldset class="tk-role-options">
+        <fieldset
+          class="tk-role-options"
+          [hidden]="
+            controls === false || (controls === undefined && roles.length === 1)
+          "
+        >
           <legend>Visible roles</legend>
           @for (role of allRoles; track role) {
             <label
@@ -479,7 +599,11 @@ export class ThemeWheel implements OnInit {
             >
           }
         </fieldset>
-        <div class="tk-role-tabs" aria-label="Active color">
+        <div
+          class="tk-role-tabs"
+          aria-label="Active color"
+          [hidden]="s.roles.length === 1"
+        >
           @for (role of s.roles; track role) {
             <button
               type="button"
@@ -509,6 +633,8 @@ export class ThemeWheel implements OnInit {
   }`,
 })
 export class ThemePicker implements OnInit {
+  @Input() disabled?: boolean;
+  @Input() controls?: boolean;
   @Input() roles: readonly Role[] = allRoles;
   @Input() activeRole?: Role;
   @Input() view: ThemePickerView = 'shared-wheel';
@@ -538,6 +664,7 @@ export class ThemePicker implements OnInit {
     this.picker =
       this.store ??
       createThemePickerStore(this.theme, {
+        disabled: this.disabled,
         roles: this.roles,
         activeRole: this.activeRole,
         view: this.view,

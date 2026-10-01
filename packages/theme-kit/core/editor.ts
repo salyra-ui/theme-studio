@@ -1,4 +1,8 @@
-import { channelsToHex, getColorName, normalizeHex } from '@sebytza23/color-picker';
+import {
+  channelsToHex,
+  getColorName,
+  normalizeHex,
+} from '@sebytza23/color-picker';
 import {
   generatePalette,
   generateBackground,
@@ -25,9 +29,11 @@ export function withThemeColor(theme: Theme, role: Role, input: string): Theme {
   return parseTheme({
     ...theme,
     ...(primary
-      ? { id: `custom-${hex.slice(1).toLowerCase()}`,
+      ? {
+          id: `custom-${hex.slice(1).toLowerCase()}`,
           name: theme.nameSource === 'custom' ? theme.name : getColorName(hex),
-          nameSource: theme.nameSource === 'custom' ? 'custom' : 'suggested' }
+          nameSource: theme.nameSource === 'custom' ? 'custom' : 'suggested',
+        }
       : {}),
     structure: {
       userPreset: {
@@ -85,12 +91,19 @@ export interface TokenSelection {
   radius?: readonly Target[];
   background?: boolean;
   mode?: Mode;
+  /** Background modes included in JSON. Defaults to the resolved active mode. */
+  modes?: readonly Mode[];
 }
 /** Exports exactly the requested tokens, without unrelated colors/borders. */
 export function selectThemeTokens(
   theme: Theme,
   selection: TokenSelection = {},
 ): Readonly<Record<string, string>> {
+  if (
+    selection.mode !== undefined &&
+    !['light', 'dark'].includes(selection.mode)
+  )
+    throw new TypeError('Invalid export mode');
   const all = themeVariables(theme, selection.mode),
     result: Record<string, string> = {};
   for (const role of selection.roles ?? ['primary']) {
@@ -124,5 +137,9 @@ export function suggestedThemeName(theme: Theme): string {
   return getColorName(themeColor(theme, 'primary'));
 }
 export function withThemeName(theme: Theme, name?: string): Theme {
-  return parseTheme({ ...theme, name: name ?? suggestedThemeName(theme), nameSource: name === undefined ? 'suggested' : 'custom' });
+  return parseTheme({
+    ...theme,
+    name: name ?? suggestedThemeName(theme),
+    nameSource: name === undefined ? 'suggested' : 'custom',
+  });
 }

@@ -169,3 +169,16 @@
 .tk-name { display: grid; gap: .35rem; margin-block: .75rem; font-size: .85rem; }
 .tk-name input { padding: .55rem .7rem; color: inherit; background: transparent; border: 1px solid currentColor; border-radius: var(--border-radius-input, .5rem); }
 .tk-name small { opacity: .65; }
+
+.tk-palette { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: var(--tk-palette-gap, 4px); }
+.tk-palette [data-palette-part="item"] { min-width: 0; }
+.tk-palette [data-palette-part="label"] { display: block; font-size: var(--tk-shade-label-size, 11px); text-align: center; margin-bottom: 6px; overflow-wrap: anywhere; }
+.tk-palette .tk-shade { height: var(--tk-swatch-height, 48px); border-radius: var(--tk-swatch-radius, 4px); }
+.tk-palette[data-shape="circle"] .tk-shade { aspect-ratio: 1; width: min(100%, var(--tk-swatch-height, 48px)); height: auto; margin-inline: auto; border-radius: 50%; }
+.tk-palette[data-shape="joined"] { gap: 0; }
+.tk-palette[data-shape="joined"] .tk-shade { border-radius: 0; }
+.tk-palette[data-shape="joined"] [data-palette-part="item"]:first-child .tk-shade { border-radius: var(--tk-swatch-radius, 8px) 0 0 var(--tk-swatch-radius, 8px); }
+.tk-palette[data-shape="joined"] [data-palette-part="item"]:last-child .tk-shade { border-radius: 0 var(--tk-swatch-radius, 8px) var(--tk-swatch-radius, 8px) 0; }
+
+.tk-provider-controls { display: contents; border: 0; padding: 0; margin: 0; min-width: 0; }
+.tk-scope[data-disabled="true"] { opacity: var(--tk-disabled-opacity, .55); cursor: not-allowed; }

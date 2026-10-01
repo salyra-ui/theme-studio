@@ -20,7 +20,7 @@ import {
 } from '../core';
 import { useThemeStore } from './context';
 import ThemeWheel from './ThemeWheel.vue';
-const props = defineProps<ThemePickerOptions & { picker?: ThemePickerStore }>(),
+const props = withDefaults(defineProps<{ roles?: readonly Role[]; activeRole?: Role; view?: ThemePickerView; controls?: boolean; disabled?: boolean; picker?: ThemePickerStore }>(), { controls: undefined, disabled: undefined }),
   picker = props.picker ?? createThemePickerStore(useThemeStore(), props),
   state = shallowRef(picker.getSnapshot());
 const unsubscribe = picker.subscribe(
@@ -43,7 +43,12 @@ function toggle(role: Role, checked: boolean) {
 <template>
   <ColorProvider :store="picker.activeColor"
     ><div class="tk-picker tk-generator">
-      <label class="cp-format"
+      <label
+        class="cp-format"
+        :hidden="
+          props.controls === false ||
+          (props.controls === undefined && props.roles?.length === 1)
+        "
         >Theme picker view<select
           :value="state.view"
           @change="
@@ -63,7 +68,13 @@ function toggle(role: Role, checked: boolean) {
           </option>
         </select></label
       >
-      <fieldset class="tk-role-options">
+      <fieldset
+        class="tk-role-options"
+        :hidden="
+          props.controls === false ||
+          (props.controls === undefined && props.roles?.length === 1)
+        "
+      >
         <legend>Visible roles</legend>
         <label v-for="role in allRoles" :key="role"
           ><input
@@ -74,7 +85,11 @@ function toggle(role: Role, checked: boolean) {
           />{{ role }}</label
         >
       </fieldset>
-      <div class="tk-role-tabs" aria-label="Active color">
+      <div
+        class="tk-role-tabs"
+        aria-label="Active color"
+        :hidden="state.roles.length === 1"
+      >
         <button
           v-for="role in state.roles"
           :key="role"

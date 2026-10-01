@@ -1,20 +1,22 @@
 ---
-import { defaultTheme, shades, type Theme, type Role } from '../core';
-interface Props {
+import { defaultTheme, shades, type Theme, type Role, type PaletteOptions } from '../core';
+interface Props extends PaletteOptions {
+  class?: string;
   theme?: Theme;
   role?: Role;
 }
-const { theme = defaultTheme, role = 'primary' } = Astro.props;
+const { theme = defaultTheme, role = 'primary', shape = 'square', classes = {}, labels = {}, shadeClasses = {}, class: className = '' } = Astro.props;
 ---
 
 <tk-palette role-name={role}>
-  <div class="tk-palette">
+  <div class:list={['tk-palette', classes.root, className]} data-shape={shape} aria-label={`${role} shades`}>
     {shades.map((shade) => (
-      <div>
-        <span>{shade}</span>
+      <div data-palette-part="item" class:list={[classes.item, shadeClasses[shade]]}>
+        <span data-palette-part="label" class={classes.label}>{labels[shade] ?? shade}</span>
         <div
-          data-shade
-          class="tk-shade"
+          data-shade={shade}
+          data-palette-part="swatch"
+          class:list={['tk-shade', classes.swatch]}
           style={{
             background: `hsl(${theme.structure.userPreset[role][shade]})`,
           }}

@@ -19,6 +19,9 @@ export interface ThemePickerSnapshot {
   readonly colors: Readonly<Record<Role, ColorSnapshot>>;
 }
 export interface ThemePickerOptions {
+  disabled?: boolean;
+  /** Hide role and view selectors for a fixed composition. Defaults to false for one role. */
+  controls?: boolean;
   roles?: readonly Role[];
   activeRole?: Role;
   view?: ThemePickerView;
@@ -51,7 +54,12 @@ export function createThemePickerStore(
   const colors = Object.fromEntries(
     allRoles.map((role) => [
       role,
-      createColorStore(themeColor(theme.getSnapshot().theme, role)),
+      createColorStore(
+        themeColor(theme.getSnapshot().theme, role),
+        'hex',
+        'area',
+        theme.getSnapshot().disabled || !!options.disabled,
+      ),
     ]),
   ) as Record<Role, ColorStore>;
   let selected = validate(options.roles ?? allRoles),
@@ -75,7 +83,8 @@ export function createThemePickerStore(
   let snapshot = capture(),
     syncing = false,
     mounts = 0,
-    unsubscribe: (() => void) | undefined;
+    unsubscribe: (() => void) | undefined,
+    fieldRegistration: import('./types').ThemeFieldRegistration | undefined;
   const server = snapshot,
     serverColor = colors[active].getServerSnapshot();
   const publish = () => {
@@ -97,6 +106,11 @@ export function createThemePickerStore(
     syncing = true;
     try {
       for (const role of allRoles) {
+        const disabled = theme.getSnapshot().disabled || !!options.disabled;
+        if (colors[role].getSnapshot().disabled !== disabled) {
+          colors[role].setDisabled(disabled);
+          changed = true;
+        }
         const hex = themeColor(current, role);
         if (hex !== colors[role].getSnapshot().hex) {
           colors[role].setHex(hex);
@@ -127,6 +141,7 @@ export function createThemePickerStore(
     },
     mount() {
       if (mounts++ === 0) {
+        fieldRegistration = theme.registerFields({ roles: selected });
         sync();
         unsubscribe = theme.subscribe(sync);
       }
@@ -137,6 +152,8 @@ export function createThemePickerStore(
           if (--mounts === 0) {
             unsubscribe?.();
             unsubscribe = undefined;
+            fieldRegistration?.destroy();
+            fieldRegistration = undefined;
           }
         }
       };
@@ -144,6 +161,7 @@ export function createThemePickerStore(
     selectRole,
     setRoles(values) {
       selected = validate(values);
+      fieldRegistration?.update({ roles: selected });
       if (!selected.includes(active)) active = selected[0];
       publish();
     },
@@ -161,6 +179,7 @@ export function createThemePickerStore(
       colors[role].setHSV(hsv);
     },
     activeColor: {
+      setDisabled: (disabled) => colors[active].setDisabled(disabled),
       getSnapshot: () => colors[active].getSnapshot(),
       getServerSnapshot: () => serverColor,
       getColor: () => colors[active].getColor(),

@@ -19,11 +19,19 @@ onBeforeUnmount(() => cleanup?.());
 <template>
   <div
     class="tk-scope"
+    :data-disabled="theme.disabled"
     :data-theme="theme.theme.id"
     :data-mode="theme.mode"
     :data-theme-status="theme.status"
     :style="theme.style"
   >
-    <slot />
+    <fieldset
+      class="tk-provider-controls"
+      :disabled="theme.disabled"
+      :inert="theme.disabled"
+      :aria-disabled="theme.disabled"
+    >
+      <slot />
+    </fieldset>
   </div>
 </template>

@@ -20,6 +20,9 @@ const state = createThemeStore({
 <tk-provider
   class:list={['tk-scope', className]}
   data-config={JSON.stringify({ ...options, src, storageKey, modeStorageKey })}
+  data-disabled={state.disabled}
+  inert={state.disabled}
+  aria-disabled={state.disabled}
   data-theme={state.theme.id}
   data-mode={state.mode}
   data-mode-preference={state.modePreference}

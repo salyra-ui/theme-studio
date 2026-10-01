@@ -15,9 +15,29 @@ import type {
   ThemeStorage,
   ThemeStore,
 } from './types';
+import { type TokenSelection } from './editor';
 import { harmonies } from './types';
-import { themeColor, withThemeColor, withThemeBorder, withThemeName } from './editor';
+import {
+  themeColor,
+  withThemeColor,
+  withThemeBorder,
+  withThemeName,
+} from './editor';
 
+const freezeSelection = (selection: TokenSelection) =>
+  Object.freeze({
+    ...selection,
+    ...Object.fromEntries(
+      ['roles', 'radius', 'width', 'modes']
+        .filter((key) => Array.isArray(selection[key as keyof TokenSelection]))
+        .map((key) => [
+          key,
+          Object.freeze([
+            ...(selection[key as keyof TokenSelection] as readonly string[]),
+          ]),
+        ]),
+    ),
+  });
 export function createThemeStore(options: ThemeOptions = {}): ThemeStore {
   const fallback = parseTheme(options.fallbackTheme ?? defaultTheme);
   const initialTheme = options.theme ? parseTheme(options.theme) : fallback;
@@ -29,13 +49,18 @@ export function createThemeStore(options: ThemeOptions = {}): ThemeStore {
   const modePreference = options.mode ?? 'system';
   if (!isModePreference(modePreference)) throw new TypeError('Invalid mode');
   const systemMode = options.systemMode ?? 'light';
-  if (systemMode !== 'light' && systemMode !== 'dark') throw new TypeError('Invalid system mode');
+  if (systemMode !== 'light' && systemMode !== 'dark')
+    throw new TypeError('Invalid system mode');
   const mode = modePreference === 'system' ? systemMode : modePreference;
   const timeoutMs = options.timeoutMs ?? 10000;
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0)
     throw new TypeError('timeoutMs must be positive');
   let snapshot: ThemeSnapshot = Object.freeze({
     theme,
+    selection: options.selection
+      ? freezeSelection(options.selection)
+      : undefined,
+    disabled: options.disabled ?? false,
     background: theme.backgroundMode ?? 'preserve',
     mode,
     modePreference,
@@ -126,12 +151,58 @@ export function createThemeStore(options: ThemeOptions = {}): ThemeStore {
       if (current()) controller = undefined;
     }
   }
+  let explicitSelection = options.selection !== undefined;
+  const fields = new Map<symbol, TokenSelection>();
+  const updateFields = () => {
+    if (explicitSelection) return;
+    const values = [...fields.values()];
+    const selection = values.length
+      ? freezeSelection({
+          roles: [...new Set(values.flatMap((value) => value.roles ?? []))],
+          radius: [...new Set(values.flatMap((value) => value.radius ?? []))],
+          width: [...new Set(values.flatMap((value) => value.width ?? []))],
+          background: values.some((value) => value.background),
+        })
+      : undefined;
+    if (JSON.stringify(selection) !== JSON.stringify(snapshot.selection))
+      publish({ selection });
+  };
   const setTheme = (value: Theme) => {
     const next = parseTheme(value);
     cancel();
     publish({ theme: next, status: 'ready', pending: false, error: null });
   };
   return {
+    setDisabled(disabled) {
+      if (disabled !== snapshot.disabled) publish({ disabled });
+    },
+    registerFields(selection) {
+      const id = Symbol('theme-fields');
+      fields.set(id, freezeSelection(selection));
+      updateFields();
+      let disposed = false;
+      return {
+        update(next) {
+          if (!disposed) {
+            fields.set(id, freezeSelection(next));
+            updateFields();
+          }
+        },
+        destroy() {
+          if (!disposed) {
+            disposed = true;
+            fields.delete(id);
+            updateFields();
+          }
+        },
+      };
+    },
+    setSelection(selection) {
+      explicitSelection = true;
+      const next = freezeSelection(selection);
+      if (JSON.stringify(next) !== JSON.stringify(snapshot.selection))
+        publish({ selection: next });
+    },
     getSnapshot: () => snapshot,
     getServerSnapshot: () => serverSnapshot,
     subscribe(fn) {
@@ -148,13 +219,24 @@ export function createThemeStore(options: ThemeOptions = {}): ThemeStore {
     setTheme,
     setMode(mode) {
       if (!isModePreference(mode)) throw new TypeError('Invalid mode');
-      if (snapshot.modePreference !== mode) publish({ modePreference: mode, mode: mode === 'system' ? snapshot.systemMode : mode });
+      if (snapshot.modePreference !== mode)
+        publish({
+          modePreference: mode,
+          mode: mode === 'system' ? snapshot.systemMode : mode,
+        });
     },
     setSystemMode(mode) {
-      if (mode !== 'light' && mode !== 'dark') throw new TypeError('Invalid system mode');
-      if (snapshot.systemMode !== mode) publish({ systemMode: mode, ...(snapshot.modePreference === 'system' ? { mode } : {}) });
+      if (mode !== 'light' && mode !== 'dark')
+        throw new TypeError('Invalid system mode');
+      if (snapshot.systemMode !== mode)
+        publish({
+          systemMode: mode,
+          ...(snapshot.modePreference === 'system' ? { mode } : {}),
+        });
     },
-    setName(name) { setTheme(withThemeName(snapshot.theme, name)); },
+    setName(name) {
+      setTheme(withThemeName(snapshot.theme, name));
+    },
     setBackground(mode) {
       setTheme(withThemeBackground(snapshot.theme, mode));
     },

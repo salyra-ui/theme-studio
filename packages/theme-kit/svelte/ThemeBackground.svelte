@@ -6,6 +6,10 @@
   }: { label?: string; class?: string } = $props();
   const theme = useTheme(),
     store = useThemeStore();
+  $effect(() => {
+    const fields = store.registerFields({ roles: [], background: true });
+    return fields.destroy;
+  });
 </script>
 
 <label class="tk-background {className}"

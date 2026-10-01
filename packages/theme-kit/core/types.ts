@@ -54,6 +54,7 @@ export interface Theme {
 }
 export interface ThemeSnapshot {
   readonly theme: Theme;
+  readonly disabled: boolean;
   readonly mode: Mode;
   readonly modePreference: ModePreference;
   readonly systemMode: Mode;
@@ -62,6 +63,7 @@ export interface ThemeSnapshot {
   readonly pending: boolean;
   readonly error: Error | null;
   readonly style: string;
+  readonly selection?: import('./editor').TokenSelection;
 }
 export interface ThemeStorage {
   read(): unknown | Promise<unknown>;
@@ -70,6 +72,9 @@ export interface ThemeStorage {
   subscribe?(listener: (value: unknown) => void): () => void;
 }
 export interface ThemeOptions {
+  disabled?: boolean;
+  /** Shared export selection, also used during server rendering. */
+  selection?: import('./editor').TokenSelection;
   theme?: Theme;
   fallbackTheme?: Theme;
   mode?: ModePreference;
@@ -85,14 +90,24 @@ export interface ThemeOptions {
   /** Bounds a loader that never resolves; 10 seconds by default. */
   timeoutMs?: number;
 }
+export interface ThemeFieldRegistration {
+  update(selection: import('./editor').TokenSelection): void;
+  destroy(): void;
+}
 export interface ThemeStore {
+  /** Mounted editor parts register their fields. Explicit selections take priority. */
+  registerFields(
+    selection: import('./editor').TokenSelection,
+  ): ThemeFieldRegistration;
   getSnapshot(): ThemeSnapshot;
   getServerSnapshot(): ThemeSnapshot;
   subscribe(listener: () => void): () => void;
   start(): Promise<void>;
   reload(): Promise<void>;
   stop(): void;
+  setDisabled(disabled: boolean): void;
   setTheme(theme: Theme): void;
+  setSelection(selection: import('./editor').TokenSelection): void;
   setMode(mode: ModePreference): void;
   setSystemMode(mode: Mode): void;
   setName(name?: string): void;
@@ -105,4 +120,17 @@ export interface ThemeStore {
   setHarmony(harmony: Harmony): void;
   generateHarmony(): void;
   setBorder(kind: BorderKind, target: Target, value: number): void;
+}
+
+export interface PaletteClasses {
+  root?: string;
+  item?: string;
+  swatch?: string;
+  label?: string;
+}
+export interface PaletteOptions {
+  shape?: 'square' | 'circle' | 'joined';
+  classes?: PaletteClasses;
+  labels?: Readonly<Partial<Record<Shade, string>>>;
+  shadeClasses?: Readonly<Partial<Record<Shade, string>>>;
 }

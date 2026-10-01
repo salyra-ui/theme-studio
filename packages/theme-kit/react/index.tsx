@@ -53,6 +53,7 @@ import {
   type ThemeStore,
   type Theme,
   type Role,
+  type PaletteOptions,
 } from '../core';
 const Context = createContext<ThemeStore | null>(null);
 export function useThemeStore() {
@@ -116,6 +117,7 @@ function ThemeScope({
   );
   return (
     <div
+      data-disabled={state.disabled}
       data-theme={state.theme.id}
       data-mode={state.mode}
       data-mode-preference={state.modePreference}
@@ -123,7 +125,14 @@ function ThemeScope({
       className={`tk-scope ${className}`}
       style={{ ...variables, ...style } as CSSProperties}
     >
-      {children}
+      <fieldset
+        className="tk-provider-controls"
+        disabled={state.disabled}
+        {...(state.disabled ? { inert: '' } : {})}
+        aria-disabled={state.disabled}
+      >
+        {children}
+      </fieldset>
     </div>
   );
 }
@@ -165,45 +174,108 @@ export function ThemeSwatch({
   );
 }
 export function useThemeMode() {
-  const state = useTheme(), store = useThemeStore();
-  return { preference: state.modePreference, resolvedMode: state.mode, ...themeModeActions(store) };
+  const state = useTheme(),
+    store = useThemeStore();
+  return {
+    preference: state.modePreference,
+    resolvedMode: state.mode,
+    ...themeModeActions(store),
+  };
 }
-export function ThemeMode({ className = '', value, children, labels = { system: 'System', light: 'Light mode', dark: 'Dark mode' } }: {
-  className?: string; value?: ModePreference;
+export function ThemeMode({
+  className = '',
+  value,
+  children,
+  labels = { system: 'System', light: 'Light mode', dark: 'Dark mode' },
+}: {
+  className?: string;
+  value?: ModePreference;
   labels?: Record<ModePreference, ReactNode>;
   children?: ReactNode | ((mode: ReturnType<typeof useThemeMode>) => ReactNode);
 }) {
   const mode = useThemeMode();
-  return <button type="button" className={className} aria-pressed={value ? mode.preference === value : undefined}
-    onClick={() => value ? mode.setMode(value) : mode.cycle()}>
-    {typeof children === 'function' ? children(mode) : children ?? labels[value ?? mode.preference]}
-  </button>;
+  return (
+    <button
+      type="button"
+      className={className}
+      aria-pressed={value ? mode.preference === value : undefined}
+      onClick={() => (value ? mode.setMode(value) : mode.cycle())}
+    >
+      {typeof children === 'function'
+        ? children(mode)
+        : (children ?? labels[value ?? mode.preference])}
+    </button>
+  );
 }
-export function ThemeName({ label = 'Theme name', className = '', children }: {
-  label?: string; className?: string;
-  children?: (value: { name: string; suggestedName: string; setName: ThemeStore['setName'] }) => ReactNode;
+export function ThemeName({
+  label = 'Theme name',
+  className = '',
+  children,
+}: {
+  label?: string;
+  className?: string;
+  children?: (value: {
+    name: string;
+    suggestedName: string;
+    setName: ThemeStore['setName'];
+  }) => ReactNode;
 }) {
-  const state = useTheme(), store = useThemeStore(), suggestion = suggestedThemeName(state.theme);
-  if (children) return <>{children({ name: state.theme.name, suggestedName: suggestion, setName: store.setName })}</>;
-  return <label className={`tk-name ${className}`}>{label}<input maxLength={200} value={state.theme.name}
-    placeholder={suggestion} onBlur={(e) => { if (!e.target.value) store.setName(); }} onChange={(e) => store.setName(e.target.value)} />
-    <small>Suggested: {suggestion}</small></label>;
+  const state = useTheme(),
+    store = useThemeStore(),
+    suggestion = suggestedThemeName(state.theme);
+  if (children)
+    return (
+      <>
+        {children({
+          name: state.theme.name,
+          suggestedName: suggestion,
+          setName: store.setName,
+        })}
+      </>
+    );
+  return (
+    <label className={`tk-name ${className}`}>
+      {label}
+      <input
+        maxLength={200}
+        value={state.theme.name}
+        placeholder={suggestion}
+        onBlur={(e) => {
+          if (!e.target.value) store.setName();
+        }}
+        onChange={(e) => store.setName(e.target.value)}
+      />
+      <small>Suggested: {suggestion}</small>
+    </label>
+  );
 }
 export function ThemePalette({
   role = 'primary',
   className = '',
-}: {
-  role?: Role;
-  className?: string;
-}) {
+  shape = 'square',
+  classes = {},
+  labels = {},
+  shadeClasses = {},
+}: PaletteOptions & { role?: Role; className?: string }) {
   const state = useTheme();
   return (
-    <div className={`tk-palette ${className}`}>
+    <div
+      className={`tk-palette ${classes.root ?? ''} ${className}`}
+      data-shape={shape}
+      aria-label={`${role} shades`}
+    >
       {shades.map((shade) => (
-        <div key={shade}>
-          <span>{shade}</span>
+        <div
+          key={shade}
+          data-palette-part="item"
+          className={`${classes.item ?? ''} ${shadeClasses[shade] ?? ''}`}
+        >
+          <span data-palette-part="label" className={classes.label}>
+            {labels[shade] ?? shade}
+          </span>
           <div
-            className="tk-shade"
+            data-palette-part="swatch"
+            className={`tk-shade ${classes.swatch ?? ''}`}
             style={{
               background: `hsl(${state.theme.structure.userPreset[role][shade]})`,
             }}
@@ -217,18 +289,25 @@ export function ThemePalette({
 export function ThemeGenerator({
   role = 'primary',
   wheel = false,
+  disabled = false,
   children,
   className = '',
 }: {
   children?: ReactNode;
   role?: Role;
   wheel?: boolean;
+  disabled?: boolean;
   className?: string;
 }) {
   const state = useTheme(),
     store = useThemeStore();
+  useEffect(() => {
+    const fields = store.registerFields({ roles: [role] });
+    return fields.destroy;
+  }, [store, role]);
   return (
     <ColorProvider
+      disabled={disabled || state.disabled}
       view={wheel ? 'wheel' : 'area'}
       value={channelsToHex(state.theme.structure.userPreset[role].DEFAULT)}
       onChange={(hex) => store.setColor(role, hex)}
@@ -256,6 +335,10 @@ export function ThemeBackground({
 }) {
   const state = useTheme(),
     store = useThemeStore();
+  useEffect(() => {
+    const fields = store.registerFields({ roles: [], background: true });
+    return fields.destroy;
+  }, [store]);
   return (
     <label className={`tk-background ${className}`}>
       <input
@@ -307,6 +390,10 @@ export function ThemeBorder({
   const state = useTheme(),
     store = useThemeStore(),
     value = state.theme.structure.websitePreset.border[kind][target];
+  useEffect(() => {
+    const fields = store.registerFields({ roles: [], [kind]: [target] });
+    return fields.destroy;
+  }, [store, kind, target]);
   return (
     <label className="tk-border">
       {label ?? `${target} border ${kind}`}
@@ -382,7 +469,13 @@ export function ThemePicker({
   return (
     <ColorProvider store={picker.activeColor}>
       <div className="tk-picker tk-generator">
-        <label className="cp-format">
+        <label
+          className="cp-format"
+          hidden={
+            options.controls === false ||
+            (options.controls === undefined && options.roles?.length === 1)
+          }
+        >
           Theme picker view
           <select
             value={state.view}
@@ -399,7 +492,13 @@ export function ThemePicker({
             ))}
           </select>
         </label>
-        <fieldset className="tk-role-options">
+        <fieldset
+          className="tk-role-options"
+          hidden={
+            options.controls === false ||
+            (options.controls === undefined && options.roles?.length === 1)
+          }
+        >
           <legend>Visible roles</legend>
           {allRoles.map((role) => (
             <label key={role}>
@@ -421,7 +520,11 @@ export function ThemePicker({
             </label>
           ))}
         </fieldset>
-        <div className="tk-role-tabs" aria-label="Active color">
+        <div
+          className="tk-role-tabs"
+          aria-label="Active color"
+          hidden={state.roles.length === 1}
+        >
           {state.roles.map((role) => (
             <button
               key={role}
@@ -513,7 +616,13 @@ export function ThemeExport({
   callback.current = onChange;
   useEffect(
     () => callback.current?.(themeConfiguration(state, selection)),
-    [state.theme, state.mode, state.modePreference, state.systemMode, selectionKey],
+    [
+      state.theme,
+      state.mode,
+      state.modePreference,
+      state.systemMode,
+      selectionKey,
+    ],
   );
   return children ? (
     <>{children(configuration)}</>

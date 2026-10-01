@@ -29,7 +29,7 @@ const { theme = defaultTheme, ...options } = Astro.props,
 <tk-picker data-options={JSON.stringify(options)}>
   <cp-provider data-tk-active-color value={color.hex}>
     <div class="tk-picker tk-generator">
-      <label class="cp-format">
+      <label class="cp-format" hidden={options.controls === false || (options.controls === undefined && options.roles?.length === 1)}>
         Theme picker view
         <select data-picker-view>
           {themePickerViews.map((view) => (
@@ -43,7 +43,7 @@ const { theme = defaultTheme, ...options } = Astro.props,
           ))}
         </select>
       </label>
-      <fieldset class="tk-role-options">
+      <fieldset class="tk-role-options" hidden={options.controls === false || (options.controls === undefined && options.roles?.length === 1)}>
         <legend>Visible roles</legend>
         {allRoles.map((role) => (
           <label>
@@ -57,7 +57,7 @@ const { theme = defaultTheme, ...options } = Astro.props,
           </label>
         ))}
       </fieldset>
-      <div class="tk-role-tabs" aria-label="Active color">
+      <div class="tk-role-tabs" aria-label="Active color" hidden={state.roles.length === 1}>
         {allRoles.map((role) => (
           <button
             type="button"

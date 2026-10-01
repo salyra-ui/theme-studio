@@ -55,7 +55,7 @@ React/Svelte/Vue use `ThemePicker`; Angular exposes `tk-picker` with `[roles]`, 
 
 `ThemeSelect themes={themes}` applies the chosen Theme to the nearest context. Lists can be replaced; IDs must be unique. A manually edited theme shows “Custom theme” until it exactly matches an entry again. An empty list disables the selector. The simple ThemeSwatch remains available for custom list layouts.
 
-`ThemeExport` reads that same context. Its default output is JSON; `format="css"` displays CSS declarations. The typed configuration is `{theme, mode, tokens, css, json}`. JSON saves the complete theme and mode; `selection` filters **CSS/tokens** using the same options as selectThemeTokens. Restore with `store.setTheme(saved.theme)` and `store.setMode(saved.mode)`.
+`ThemeExport` reads that same context. Its default output is JSON; `format="css"` displays CSS declarations. The typed configuration is `{theme, mode, tokens, css, json}`. A selection filters `theme`, JSON, CSS and tokens together. Mounted editor parts register their roles and geometry fields automatically on the client. Pass an explicit `selection` to the provider and export component for a matching partial server export. Restore a partial export with `store.setTheme(mergeThemeConfiguration(store.getSnapshot().theme, config.json))`. The complete internal context is available as `config.sourceTheme`. Without a selection or registered editor fields, the export contains the full theme.
 
 ```svelte
 <script lang="ts">
@@ -126,7 +126,7 @@ const cleanup = watchThemeUpdates(store, {
 
 This is a client hook for your server's existing SSE/WebSocket protocol, not a bundled backend. Applications on different origins cannot share localStorage events; they must read a common authoritative API or receive its notifications. A backend can store themes in its database with a revision/updatedAt used as ETag. Redis is optional for server caching or distributing invalidation across server instances; when a theme is saved, invalidate that server cache and publish the revision notification. Redis itself does not update a browser's cached theme. Focus/interval refresh needs no realtime transport.
 
-For React SSR, resolve remote data before constructing the store and initialize it with `{theme: resolvedTheme, mode}`. Its server snapshot is the immutable seed used for hydration. To render a configuration edited before SSR, construct a fresh store from `configuration.theme` and `configuration.mode`; client subscribers read the current live snapshot.
+For React SSR, resolve remote data before constructing the store and initialize it with `{theme: resolvedTheme, mode}`. Its server snapshot is the immutable seed used for hydration. To render a configuration edited before SSR, construct a fresh store from `configuration.sourceTheme` and `configuration.mode`; client subscribers read the current live snapshot.
 
 Protocol references: [ETag and conditional requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/ETag), [same-origin storage events](https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event), [Redis Pub/Sub for backend invalidation](https://redis.io/docs/latest/develop/use-cases/pub-sub/).
 
@@ -145,3 +145,11 @@ Install `@sebytza23/theme-kit-react`, `-svelte`, `-vue`, `-angular`, `-astro`, o
 The vanilla package exposes `mountThemeKit(host, options)`, returning `{element, store, getConfiguration, destroy}`. Or emit composable `tk-provider`, `tk-picker`, `tk-select`, `tk-export`, `cp-provider` and individual controls in HTML/PHP/htmx fragments. Custom elements connect on insertion and clean up on removal. The bundled `browser/theme-kit.js` creates `window.ThemeKit` and includes the color dependency. No npm runtime, framework or PHP extension is needed on the server.
 
 See the workspace `docs.html`, `generator.html` and `site.html` for the complete documentation and studio. These package names are prepared but not yet published to npm.
+
+## Shade swatches and disabled editors
+
+`ThemePalette` shows shades 50 through 950 for a role. Set `shape` to `square`, `circle` or `joined`. `classes` targets `root`, `item`, `swatch` and `label`. `labels` maps a shade to custom text, and `shadeClasses` styles individual shade items. The colors remain connected to the theme. Customize spacing and dimensions with `--tk-palette-gap`, `--tk-swatch-height`, `--tk-swatch-radius` and `--tk-shade-label-size`. Vanilla exposes `themePaletteMarkup(role, options)`.
+
+Pass `disabled: true` when creating the theme store or call `store.setDisabled(true)`. The provider blocks editing and keeps the current values visible. Programmatic updates remain available. Use a provider scoped to the editor if the rest of the application should stay interactive.
+
+A selection can contain `roles`, `radius`, `width`, `background` and `modes`. Radius and width targets are independent. With no `modes`, background JSON includes the resolved active mode. Set `modes: ['light', 'dark']` to include both. Selected JSON is a partial theme, so merge it with an existing theme before passing it to a full-theme loader or storage adapter.
