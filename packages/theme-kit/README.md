@@ -31,13 +31,13 @@ Read the workspace README for SSR, client fetch, failure, custom loading, persis
 
 `ThemeLoading` and `ThemeReady` accept arbitrary children. Ready includes fallback; `ThemeError` lets you expose a retry UI. ThemeGenerator is an optional composed example; combine color-picker primitives and `store.generate(hex)` to build your own controls. Angular consumers can compose their own `<cp-provider>` and connect `(colorChange)` to the theme store. CSS stays local to the provider's DOM subtree, including nested themes. Portals/teleports outside that subtree need their own provider/style variables.
 
-Build independent packages with `npm run build:packages`. Publishable output is under `release/`; tarballs are produced by `npm run pack:all`. The theme core depends on `@sebytza23/color-picker`, and each native adapter depends only on matching adapters and cores. No packages have been published to npm.
+Build independent packages with `npm run build:packages`. Publishable output is under `release/`; tarballs are produced by `npm run pack:all`. The theme core depends on `@sebytza23/color-picker`, and each native adapter depends only on matching adapters and cores. Release packages contain runtime files, types, styles and required framework components without sourcemaps.
 
 Optional surfaces: `generateTheme(seed, {background:'tinted'})` or `store.setBackground('tinted')` adds primary tint to light/dark backgrounds. `ThemeBackground` exposes the switch; neutral is the generated default. Imported themes retain their original backgrounds until explicitly changed.
 
 ## Extended API
 
-`ThemeColor role="primary|secondary|accent"` edits one palette; `wheel` enables the color wheel. `ThemeHarmony` selects analogous, triadic or split-complementary and generates the two companion colors on request. `ThemeRadius` / `ThemeBorderWidth` independently edit a target (DEFAULT, input, card, popover, button, table, picker). Width is px; radius is rem. All five adapters expose these components. The store provides setColor, setHarmony, generateHarmony and setBorder. `selectThemeTokens(theme, {roles:["primary"], radius:["card"]})` exports only selected CSS tokens; `generateThemeTokens(seed)` exports primary only. The complete theme retains three roles; legacy semantic roles are stripped.
+`ThemeColor role="primary|secondary|accent"` edits one palette; `wheel` enables the color wheel. `ThemeHarmony` selects analogous, triadic or split-complementary and generates the two companion colors on request. `ThemeRadius` / `ThemeBorderWidth` independently edit a target (DEFAULT, input, card, popover, button, table, picker). Width is px; radius is rem. All six adapters expose these components. The store provides setColor, setHarmony, generateHarmony and setBorder. `selectThemeTokens(theme, {roles:["primary"], radius:["card"]})` exports only selected CSS tokens; `generateThemeTokens(seed)` exports primary only. The complete theme retains three roles; legacy semantic roles are stripped.
 
 ## Composed picker views
 
@@ -142,9 +142,9 @@ The selected `modePreference` is `system`, `light` or `dark`; snapshot `mode` is
 
 Install `@sebytza23/theme-kit-react`, `-svelte`, `-vue`, `-angular`, `-astro`, or `-vanilla`. Each installs only its matching color adapter and core dependencies. Every adapter re-exports core helpers. Each adapter's `styles.css` includes the color controls' styles; one stylesheet import is enough. The core package contains no framework adapters.
 
-The vanilla package exposes `mountThemeKit(host, options)`, returning `{element, store, getConfiguration, destroy}`. Or emit composable `tk-provider`, `tk-picker`, `tk-select`, `tk-export`, `cp-provider` and individual controls in HTML/PHP/htmx fragments. Custom elements connect on insertion and clean up on removal. The bundled `browser/theme-kit.js` creates `window.ThemeKit` and includes the color dependency. No npm runtime, framework or PHP extension is needed on the server.
+The vanilla package exposes `mountThemeKit(host, options)`, returning `{element, store, getConfiguration, destroy}`. Or emit composable `tk-provider`, `tk-picker`, `tk-select`, `tk-export`, `cp-provider` and individual controls in HTML fragments. Custom elements connect on insertion and clean up on removal. The bundled `browser/theme-kit.js` creates `window.ThemeKit` and includes the color dependency. No npm runtime, framework or PHP extension is needed on the server.
 
-See the workspace `docs.html`, `generator.html` and `site.html` for the complete documentation and studio. These package names are prepared but not yet published to npm.
+See the workspace `docs.html`, `generator.html` and `site.html` for the complete documentation and studio. Install the adapter for your framework from npm.
 
 ## Shade swatches and disabled editors
 
