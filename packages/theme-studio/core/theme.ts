@@ -119,6 +119,8 @@ function channels(v: unknown): string {
 /** Validate, copy and freeze at trust boundaries; strip unknown keys. */
 export function parseTheme(value: unknown): Theme {
   const t = object(value);
+  if (t.schemaVersion !== undefined && t.schemaVersion !== 0 && t.schemaVersion !== 1)
+    throw new TypeError('Unsupported theme schema version');
   if (
     typeof t.id !== 'string' ||
     !t.id.length ||
@@ -189,6 +191,7 @@ export function parseTheme(value: unknown): Theme {
     }),
   );
   return Object.freeze({
+    schemaVersion: 1,
     id: t.id,
     name: t.name,
     ...(t.nameSource !== undefined ? { nameSource: t.nameSource } : {}),

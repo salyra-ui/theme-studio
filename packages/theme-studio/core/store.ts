@@ -38,6 +38,7 @@ const freezeSelection = (selection: TokenSelection) =>
         ]),
     ),
   });
+const storeOptions = new WeakMap<ThemeStore, ThemeOptions>();
 export function createThemeStore(options: ThemeOptions = {}): ThemeStore {
   const fallback = parseTheme(options.fallbackTheme ?? defaultTheme);
   const initialTheme = options.theme ? parseTheme(options.theme) : fallback;
@@ -172,7 +173,7 @@ export function createThemeStore(options: ThemeOptions = {}): ThemeStore {
     cancel();
     publish({ theme: next, status: 'ready', pending: false, error: null });
   };
-  return {
+  const store: ThemeStore = {
     setDisabled(disabled) {
       if (disabled !== snapshot.disabled) publish({ disabled });
     },
@@ -262,6 +263,8 @@ export function createThemeStore(options: ThemeOptions = {}): ThemeStore {
       );
     },
   };
+  storeOptions.set(store, options);
+  return store;
 }
 /** Debounced optional persistence; provider cleanup cancels I/O and flushes the last theme. */
 export function mountThemeStore(
@@ -272,6 +275,14 @@ export function mountThemeStore(
     'revalidateOnFocus' | 'revalidateIntervalMs' | 'modeStorage'
   > = {},
 ): () => void {
+  const initial = storeOptions.get(store) ?? {};
+  storage ??= initial.storage;
+  options = {
+    ...initial,
+    ...Object.fromEntries(
+      Object.entries(options).filter(([, value]) => value !== undefined),
+    ),
+  };
   let last = store.getSnapshot().theme,
     timer: ReturnType<typeof setTimeout> | undefined,
     queued: Theme | undefined,

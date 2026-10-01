@@ -45,6 +45,8 @@ export interface ThemeStructure {
   };
 }
 export interface Theme {
+  /** Missing on older inputs. parseTheme migrates them to the current schema. */
+  readonly schemaVersion?: 1;
   readonly id: string;
   readonly name: string;
   readonly nameSource?: 'suggested' | 'custom';

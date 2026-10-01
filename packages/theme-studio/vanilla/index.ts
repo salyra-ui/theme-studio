@@ -90,6 +90,7 @@ export function mountThemeKit(
   picker.setAttribute('data-options', JSON.stringify(options.picker ?? {}));
   const list = provider.querySelector('tk-select')!;
   list.setAttribute('data-themes', JSON.stringify(options.themes ?? []));
+  if (!options.themes?.length) list.setAttribute('hidden', '');
   const select = list.querySelector('select')!;
   select.disabled = !options.themes?.length;
   for (const theme of options.themes ?? []) {

@@ -12,6 +12,7 @@ import {
 import { themeVariables, parseTheme } from './theme';
 import { selectThemeTokens, type TokenSelection } from './editor';
 export interface SelectedTheme {
+  readonly schemaVersion?: 1;
   readonly id: string;
   readonly name: string;
   readonly nameSource?: Theme['nameSource'];
@@ -30,6 +31,7 @@ export interface SelectedTheme {
   };
 }
 export interface ThemeConfiguration {
+  readonly schemaVersion: 1;
   /** Only selected fields when an export selection is configured. */
   readonly theme: SelectedTheme;
   /** Complete internal context for application rendering, not serialized in JSON. */
@@ -39,10 +41,12 @@ export interface ThemeConfiguration {
   readonly systemMode: Mode;
   readonly tokens: Readonly<Record<string, string>>;
   readonly css: string;
+  /** Tailwind 4 utility aliases and the selected runtime variables. */
+  readonly tailwind: string;
   /** Selected theme fields and mode. Merge partial exports with mergeThemeConfiguration(). */
   readonly json: string;
 }
-export type ThemeExportFormat = 'json' | 'css';
+export type ThemeExportFormat = 'json' | 'css' | 'tailwind';
 const configurations = new WeakMap<Theme, Map<string, ThemeConfiguration>>();
 export function themeConfiguration(
   state: ThemeSnapshot,
@@ -67,6 +71,7 @@ export function themeConfiguration(
     ? (selection.mode ?? state.mode)
     : state.modePreference;
   const result = Object.freeze({
+    schemaVersion: 1 as const,
     theme,
     sourceTheme: state.theme,
     mode: state.mode,
@@ -76,8 +81,10 @@ export function themeConfiguration(
     css: Object.entries(tokens)
       .map(([key, value]) => `${key}:${value}`)
       .join(';'),
+    tailwind: themeTailwind(state, { selection }),
     json: JSON.stringify(
       {
+        schemaVersion: 1,
         theme,
         mode,
         ...(!selection || (selection.modes?.length ?? 1) > 1
@@ -152,6 +159,7 @@ function selectedTheme(theme: Theme, selection: TokenSelection): SelectedTheme {
   )
     throw new TypeError('Select one or both appearance modes');
   return Object.freeze({
+    schemaVersion: 1,
     id: theme.id,
     name: theme.name,
     nameSource: theme.nameSource,
@@ -172,6 +180,12 @@ export function mergeThemeConfiguration(
   value: string | { theme: SelectedTheme },
 ): Theme {
   const saved = typeof value === 'string' ? JSON.parse(value) : value;
+  if (
+    'schemaVersion' in saved &&
+    saved.schemaVersion !== 0 &&
+    saved.schemaVersion !== 1
+  )
+    throw new TypeError('Unsupported configuration schema version');
   const patch = saved.theme;
   if (!patch || typeof patch !== 'object' || !patch.structure)
     throw new TypeError('Invalid theme configuration');
@@ -217,6 +231,62 @@ export function mergeThemeConfiguration(
       },
     },
   });
+}
+/** Maps selected tokens to Tailwind utilities. Runtime variables stay scoped to the chosen selector. */
+export function themeTailwind(
+  state: ThemeSnapshot,
+  options: {
+    selection?: TokenSelection;
+    selector?: string;
+    darkSelector?: string;
+  } = {},
+): string {
+  const selection = options.selection ?? state.selection;
+  const modes = selection?.modes ?? [selection?.mode ?? state.mode];
+  if (
+    !modes.length ||
+    modes.some((mode) => mode !== 'light' && mode !== 'dark')
+  )
+    throw new TypeError('Select one or both appearance modes');
+  const selector = options.selector ?? ':root';
+  const darkSelector = options.darkSelector ?? '.dark';
+  const variables = (mode: Mode) =>
+    selection
+      ? selectThemeTokens(state.theme, { ...selection, mode })
+      : themeVariables(state.theme, mode);
+  const tokens = variables(modes[0]);
+  const aliases: string[] = [];
+  const utilities: string[] = [];
+  for (const key of Object.keys(tokens)) {
+    const token = key.slice(2);
+    if (
+      key === '--background' ||
+      key === '--foreground' ||
+      roles.some((role) => token === role || token.startsWith(role + '-'))
+    )
+      aliases.push(`  --color-${token}: hsl(var(${key}));`);
+    else if (key.startsWith('--border-radius'))
+      aliases.push(
+        `  --radius-${key === '--border-radius' ? 'theme' : key.slice('--border-radius-'.length)}: var(${key});`,
+      );
+    else if (key.startsWith('--border-width'))
+      utilities.push(
+        `@utility border-${key === '--border-width' ? 'theme' : key.slice('--border-width-'.length)} {\n  border-width: var(${key});\n}`,
+      );
+  }
+  const blocks = modes.map(
+    (mode, index) =>
+      `${index === 0 ? selector : mode === 'dark' ? darkSelector : `${selector}:not(${darkSelector})`} {\n${Object.entries(
+        variables(mode),
+      )
+        .map(([key, value]) => `  ${key}: ${value};`)
+        .join('\n')}\n}`,
+  );
+  return [
+    ...blocks,
+    ...(aliases.length ? [`@theme inline {\n${aliases.join('\n')}\n}`] : []),
+    ...utilities,
+  ].join('\n\n');
 }
 /** A list may change over time; validate IDs so selection is unambiguous. */
 export function themeList(themes: readonly Theme[]): readonly Theme[] {
