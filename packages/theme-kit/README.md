@@ -2,6 +2,10 @@
 
 Theme generation and composition, depending on color-picker. Optional fetching and storage, scoped CSS, SSR-safe per-provider state, separate loading content and fallback theme.
 
+![Theme generator with three color roles and a live dark preview](https://sebytza23.github.io/theme-kit/npm/theme-kit-generator.jpg)
+
+![Custom shade labels and joined swatches](https://sebytza23.github.io/theme-kit/npm/theme-kit-swatches.jpg)
+
 Core package: `@sebytza23/theme-kit`. Independent adapters: `@sebytza23/theme-kit-react`, `-svelte`, `-vue`, `-angular`, `-astro`, `-vanilla`. Each adapter exports core helpers and its own `/styles.css`. Astro components use `@sebytza23/theme-kit-astro/*.astro`.
 
 Core API: `generateTheme`, `generatePalette`, `createThemeStore`, `parseTheme`, `themeStyle`, `themeVariables`, `fromLegacyTheme`, `toLegacyTheme`, `browserStorage`.
@@ -144,7 +148,7 @@ Install `@sebytza23/theme-kit-react`, `-svelte`, `-vue`, `-angular`, `-astro`, o
 
 The vanilla package exposes `mountThemeKit(host, options)`, returning `{element, store, getConfiguration, destroy}`. Or emit composable `tk-provider`, `tk-picker`, `tk-select`, `tk-export`, `cp-provider` and individual controls in HTML fragments. Custom elements connect on insertion and clean up on removal. The bundled `browser/theme-kit.js` creates `window.ThemeKit` and includes the color dependency. No npm runtime, framework or PHP extension is needed on the server.
 
-See the workspace `docs.html`, `generator.html` and `site.html` for the complete documentation and studio. Install the adapter for your framework from npm.
+[Documentation and examples](https://sebytza23.github.io/theme-kit/docs.html?kit=theme-kit). Install the adapter for your framework from npm.
 
 ## Shade swatches and disabled editors
 

@@ -1,6 +1,6 @@
 {
   "name": "@sebytza23/theme-kit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "private": true,
   "sideEffects": [
@@ -54,6 +54,7 @@
     }
   },
   "dependencies": {
-    "@sebytza23/color-picker": "0.1.0"
-  }
+    "@sebytza23/color-picker": "0.1.1"
+  },
+  "homepage": "https://sebytza23.github.io/theme-kit/docs.html?kit=theme-kit"
 }

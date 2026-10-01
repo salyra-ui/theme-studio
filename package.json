@@ -1,6 +1,6 @@
 {
   "name": "sebytza23-theme-kit-workspace",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "Copy-first theme engine and composable framework components",
@@ -17,7 +17,8 @@
     "build:packages": "node scripts/build.mjs && node scripts/split-packages.mjs",
     "build:site": "npm run build:packages && vite build && node scripts/site-build.mjs",
     "pack:all": "npm run build:packages && node scripts/pack-all.mjs",
-    "check:docs": "tsx scripts/docs-check.ts"
+    "check:docs": "tsx scripts/docs-check.ts",
+    "test:consumer": "node scripts/consumer-check.mjs --registry"
   },
   "devDependencies": {
     "@angular/common": "~19.2.0",
@@ -64,12 +65,12 @@
     "node": ">=22.19.0"
   },
   "dependencies": {
-    "@sebytza23/color-picker": "file:vendor/sebytza23-color-picker-0.1.0.tgz",
-    "@sebytza23/color-picker-react": "file:vendor/sebytza23-color-picker-react-0.1.0.tgz",
-    "@sebytza23/color-picker-svelte": "file:vendor/sebytza23-color-picker-svelte-0.1.0.tgz",
-    "@sebytza23/color-picker-vue": "file:vendor/sebytza23-color-picker-vue-0.1.0.tgz",
-    "@sebytza23/color-picker-angular": "file:vendor/sebytza23-color-picker-angular-0.1.0.tgz",
-    "@sebytza23/color-picker-astro": "file:vendor/sebytza23-color-picker-astro-0.1.0.tgz",
-    "@sebytza23/color-picker-vanilla": "file:vendor/sebytza23-color-picker-vanilla-0.1.0.tgz"
+    "@sebytza23/color-picker": "0.1.1",
+    "@sebytza23/color-picker-react": "0.1.1",
+    "@sebytza23/color-picker-svelte": "0.1.1",
+    "@sebytza23/color-picker-vue": "0.1.1",
+    "@sebytza23/color-picker-angular": "0.1.1",
+    "@sebytza23/color-picker-astro": "0.1.1",
+    "@sebytza23/color-picker-vanilla": "0.1.1"
   }
 }
