@@ -13,14 +13,23 @@ import {
   createThemePickerStore,
   themePickerViews,
   roles as allRoles,
-  type ThemePickerOptions,
   type ThemePickerStore,
   type ThemePickerView,
   type Role,
 } from '../core';
 import { useThemeStore } from './context';
 import ThemeWheel from './ThemeWheel.vue';
-const props = withDefaults(defineProps<{ roles?: readonly Role[]; activeRole?: Role; view?: ThemePickerView; controls?: boolean; disabled?: boolean; picker?: ThemePickerStore }>(), { controls: undefined, disabled: undefined }),
+const props = withDefaults(
+    defineProps<{
+      roles?: readonly Role[];
+      activeRole?: Role;
+      view?: ThemePickerView;
+      controls?: boolean;
+      disabled?: boolean;
+      picker?: ThemePickerStore;
+    }>(),
+    { controls: undefined, disabled: undefined },
+  ),
   picker = props.picker ?? createThemePickerStore(useThemeStore(), props),
   state = shallowRef(picker.getSnapshot());
 const unsubscribe = picker.subscribe(

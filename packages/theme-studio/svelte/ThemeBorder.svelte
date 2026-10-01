@@ -1,31 +1,48 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import type { BorderKind, Target } from '../core';
-  import { useTheme, useThemeStore } from './context';
+  import {
+    bindBorderInput,
+    borderControlLabel,
+    borderControlUnit,
+  } from '../core/border-control';
+  import { useThemeStore } from './context';
   let {
     kind = 'width',
     target = 'DEFAULT',
     label,
-  }: { kind?: BorderKind; target?: Target; label?: string } = $props();
-  const state = useTheme(),
-    store = useThemeStore();
-  function change(e: Event) {
-    const n = (e.currentTarget as HTMLInputElement).valueAsNumber;
-    if (Number.isFinite(n) && n >= 0 && n <= 1000)
-      store.setBorder(kind, target, n);
-  }
+  }: {
+    kind?: BorderKind;
+    target?: Target;
+    label?: string;
+  } = $props();
+  const store = useThemeStore();
+  const initial = untrack(
+    () =>
+      store.getSnapshot().theme.structure.websitePreset.border[kind][target],
+  );
+  let input: HTMLInputElement;
   $effect(() => {
     const fields = store.registerFields({ roles: [], [kind]: [target] });
-    return fields.destroy;
+    const unbind = bindBorderInput(input, store, kind, target);
+    return () => {
+      unbind();
+      fields.destroy();
+    };
   });
 </script>
 
-<label class="tk-border"
-  >{label ?? `${target} border ${kind}`}<input
-    type="number"
-    min="0"
-    max="1000"
-    step={kind === 'width' ? 1 : 0.125}
-    value={$state.theme.structure.websitePreset.border[kind][target]}
-    oninput={change}
-  />{kind === 'width' ? 'px' : 'rem'}</label
->
+<label class="tk-border">
+  <span>{label ?? borderControlLabel(kind, target)}</span>
+  <span class="tk-border-field">
+    <input
+      bind:this={input}
+      type="number"
+      min="0"
+      max="1000"
+      step={kind === 'width' ? 1 : 0.125}
+      value={initial}
+    />
+    <span aria-hidden="true">{borderControlUnit(kind)}</span>
+  </span>
+</label>

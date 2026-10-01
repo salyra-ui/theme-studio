@@ -219,3 +219,7 @@ Current complete themes and partial configuration exports use `schemaVersion: 1`
 `themeContrast(snapshot, role)` returns the text/surface contrast result without changing the theme. `createThemeCollection({limit, favorites, storage})` keeps recent and favorite complete themes. Call `load()` on client mount, `remember(theme)` after Apply and `toggleFavorite(theme)` for a favorite action. `browserThemeCollectionStorage(key)` provides optional persistence. Subscribe and pass the chosen list to the existing ThemeSelect component.
 
 [Complete examples for all six integrations](https://salyra-ui.github.io/theme-studio/generator.html)
+
+## Editor control styling
+
+Use `--tk-control-height`, `--tk-control-radius`, `--tk-control-border`, `--tk-focus-color` and `--tk-gap` on the editor wrapper. These style editor controls independently of generated radius and border-width tokens. Geometry inputs keep an incomplete draft while focused and write only valid values from 0 to 1000. Blur, Enter or Escape restores the current stored value. Radius uses rem and width uses px. Vanilla provider updates preserve unrelated inline styles and custom control variables.

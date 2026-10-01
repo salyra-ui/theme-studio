@@ -34,9 +34,6 @@ import {
   type TokenSelection,
   themePickerMarkers,
   createThemePickerStore,
-  bindThemeWheel,
-  sharedWheelStyle,
-  themeMarkerStyle,
   themePickerViews,
   roles as allRoles,
   type ThemePickerOptions,
@@ -55,6 +52,11 @@ import {
   type Role,
   type PaletteOptions,
 } from '../core';
+import {
+  bindBorderInput,
+  borderControlLabel,
+  borderControlUnit,
+} from '../core/border-control';
 const Context = createContext<ThemeStore | null>(null);
 export function useThemeStore() {
   const store = useContext(Context);
@@ -387,29 +389,32 @@ export function ThemeBorder({
   target?: Target;
   label?: string;
 }) {
-  const state = useTheme(),
-    store = useThemeStore(),
-    value = state.theme.structure.websitePreset.border[kind][target];
+  const store = useThemeStore();
+  const input = useRef<HTMLInputElement>(null);
+  const initial =
+    store.getSnapshot().theme.structure.websitePreset.border[kind][target];
   useEffect(() => {
     const fields = store.registerFields({ roles: [], [kind]: [target] });
-    return fields.destroy;
+    const unbind = bindBorderInput(input.current!, store, kind, target);
+    return () => {
+      unbind();
+      fields.destroy();
+    };
   }, [store, kind, target]);
   return (
     <label className="tk-border">
-      {label ?? `${target} border ${kind}`}
-      <input
-        type="number"
-        min={0}
-        max={1000}
-        step={kind === 'width' ? 1 : 0.125}
-        value={value}
-        onChange={(e) => {
-          const n = e.currentTarget.valueAsNumber;
-          if (Number.isFinite(n) && n >= 0 && n <= 1000)
-            store.setBorder(kind, target, n);
-        }}
-      />
-      {kind === 'width' ? 'px' : 'rem'}
+      <span>{label ?? borderControlLabel(kind, target)}</span>
+      <span className="tk-border-field">
+        <input
+          ref={input}
+          type="number"
+          min={0}
+          max={1000}
+          step={kind === 'width' ? 1 : 0.125}
+          defaultValue={initial}
+        />
+        <span aria-hidden="true">{borderControlUnit(kind)}</span>
+      </span>
     </label>
   );
 }
@@ -424,16 +429,6 @@ export function ThemeBorderWidth(
   return <ThemeBorder {...props} kind="width" />;
 }
 
-const cssObject = (css: string) =>
-  Object.fromEntries(
-    css.split(';').map((part) => {
-      const i = part.indexOf(':');
-      return [
-        part.slice(0, i).replace(/-([a-z])/g, (_, c) => c.toUpperCase()),
-        part.slice(i + 1),
-      ];
-    }),
-  ) as CSSProperties;
 export function ThemeWheel({ picker }: { picker: ThemePickerStore }) {
   const state = useSyncExternalStore(
     picker.subscribe,

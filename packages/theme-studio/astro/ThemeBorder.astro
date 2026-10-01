@@ -1,4 +1,5 @@
 ---
+import { borderControlLabel, borderControlUnit } from '../core/border-control';
 import {
   defaultTheme,
   type Theme,
@@ -15,22 +16,24 @@ const {
   theme = defaultTheme,
   kind = 'width',
   target = 'DEFAULT',
-  label = `${target} border ${kind}`,
+  label = borderControlLabel(kind, target),
 } = Astro.props;
 ---
 
 <label class="tk-border">
-  {label}
-  <input
-    type="number"
-    min="0"
-    max="1000"
-    step={kind === 'width' ? 1 : 0.125}
-    value={theme.structure.websitePreset.border[kind][target]}
-    data-tk-border={kind}
-    data-target={target}
-  />
-  {kind === 'width' ? 'px' : 'rem'}
+  <span>{label}</span>
+  <span class="tk-border-field">
+    <input
+      type="number"
+      min="0"
+      max="1000"
+      step={kind === 'width' ? 1 : 0.125}
+      value={theme.structure.websitePreset.border[kind][target]}
+      data-tk-border={kind}
+      data-target={target}
+    />
+    <span aria-hidden="true">{borderControlUnit(kind)}</span>
+  </span>
 </label>
 <script>
   import './client';

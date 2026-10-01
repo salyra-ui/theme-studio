@@ -1,5 +1,6 @@
 import '@salyra-ui/color-picker/vanilla';
-import { scopeStyle } from './style';
+import { bindBorderInput } from '../core/border-control';
+import { applyScopeStyle } from './style';
 import { channelsToHex } from '@salyra-ui/color-picker';
 import {
   browserModeStorage,
@@ -58,6 +59,36 @@ export class ThemeProviderElement extends HTMLElement {
       options.modeStorage = browserModeStorage(modeStorageKey);
     this.store ??= createThemeStore(options);
     const store = this.store;
+    // Reconcile geometry bindings when Astro slots or vanilla consumers add/remove fields.
+    const borderInputs = new Map<
+      HTMLInputElement,
+      { kind: BorderKind; target: Target; destroy(): void }
+    >();
+    const syncBorderInputs = () => {
+      for (const [input, binding] of borderInputs) {
+        if (
+          input.closest('tk-provider') !== this ||
+          input.dataset.tkBorder !== binding.kind ||
+          input.dataset.target !== binding.target
+        ) {
+          binding.destroy();
+          borderInputs.delete(input);
+        }
+      }
+      for (const input of this.querySelectorAll<HTMLInputElement>(
+        '[data-tk-border]',
+      )) {
+        if (input.closest('tk-provider') !== this || borderInputs.has(input))
+          continue;
+        const kind = input.dataset.tkBorder as BorderKind;
+        const target = input.dataset.target as Target;
+        borderInputs.set(input, {
+          kind,
+          target,
+          destroy: bindBorderInput(input, store, kind, target),
+        });
+      }
+    };
     const syncSelection = () => {
       if (options.selection) return;
       const own = (selector: string) =>
@@ -105,7 +136,10 @@ export class ThemeProviderElement extends HTMLElement {
       });
     };
     const observer = new this.ownerDocument.defaultView!.MutationObserver(
-      syncSelection,
+      () => {
+        syncBorderInputs();
+        syncSelection();
+      },
     );
     observer.observe(this, {
       childList: true,
@@ -122,7 +156,7 @@ export class ThemeProviderElement extends HTMLElement {
     });
     const update = () => {
       const state = store.getSnapshot();
-      this.style.cssText = scopeStyle(state);
+      applyScopeStyle(this, state);
       this.toggleAttribute('inert', state.disabled);
       this.setAttribute('aria-disabled', String(state.disabled));
       this.dataset.disabled = String(state.disabled);
@@ -203,16 +237,6 @@ export class ThemeProviderElement extends HTMLElement {
             input.value = state.theme.harmony ?? 'analogous';
         },
       );
-      this.querySelectorAll<HTMLInputElement>('[data-tk-border]').forEach(
-        (input) => {
-          if (input.closest('tk-provider') === this)
-            input.value = String(
-              state.theme.structure.websitePreset.border[
-                input.dataset.tkBorder as BorderKind
-              ][input.dataset.target as Target],
-            );
-        },
-      );
       this.dispatchEvent(new CustomEvent('theme-change', { detail: state }));
     };
     const color = (event: Event) => {
@@ -269,17 +293,9 @@ export class ThemeProviderElement extends HTMLElement {
         );
       if (input.matches('[data-tk-harmony]'))
         store.setHarmony(input.value as Harmony);
-      if (input.matches('[data-tk-border]')) {
-        const n = input.valueAsNumber;
-        if (Number.isFinite(n) && n >= 0 && n <= 1000)
-          store.setBorder(
-            input.dataset.tkBorder as BorderKind,
-            input.dataset.target as Target,
-            n,
-          );
-      }
     };
     this.addEventListener('change', syncSelection);
+    syncBorderInputs();
     syncSelection();
     this.addEventListener('change', edit);
     this.addEventListener('input', edit);
@@ -291,6 +307,8 @@ export class ThemeProviderElement extends HTMLElement {
       unmount = mountThemeStore(store, options.storage, options);
     this.cleanup = () => {
       observer.disconnect();
+      borderInputs.forEach((binding) => binding.destroy());
+      borderInputs.clear();
       this.removeEventListener('change', syncSelection);
       unsubscribe();
       unmount();

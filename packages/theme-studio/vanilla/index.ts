@@ -21,6 +21,7 @@ import {
   type PaletteOptions,
   shades,
 } from '../core';
+import { borderControlLabel, borderControlUnit } from '../core/border-control';
 import type { ThemeProviderElement } from './elements';
 export interface ThemeKitOptions extends ThemeOptions {
   store?: ThemeStore;
@@ -50,8 +51,8 @@ export const themeKitMarkup = `<div class="tk-generator">
   ${themePickerMarkup}
   <div class="tk-harmony"><label>Color harmony<select data-tk-harmony><option value="analogous">Analogous</option><option value="triadic">Triadic</option><option value="split-complementary">Split complementary</option></select></label><button type="button" data-tk-generate-harmony>Generate accent &amp; secondary</button></div>
   <label class="tk-background"><input type="checkbox" data-tk-background />Tint background with primary</label>
-  <label class="tk-border">Card radius<input type="number" min="0" max="1000" step=".125" data-tk-border="radius" data-target="card" />rem</label>
-  <label class="tk-border">Card border width<input type="number" min="0" max="1000" step="1" data-tk-border="width" data-target="card" />px</label>
+  <label class="tk-border"><span>Card radius</span><span class="tk-border-field"><input type="number" min="0" max="1000" step=".125" data-tk-border="radius" data-target="card" /><span aria-hidden="true">rem</span></span></label>
+  <label class="tk-border"><span>Card border width</span><span class="tk-border-field"><input type="number" min="0" max="1000" step="1" data-tk-border="width" data-target="card" /><span aria-hidden="true">px</span></span></label>
   <details><summary>Export configuration</summary><tk-export format="json"><pre class="tk-export" aria-label="Theme configuration"></pre></tk-export></details>
 </div>`;
 /** Native DOM controls with exports limited to the mounted fields. */
@@ -73,7 +74,7 @@ export function mountThemeKit(
     const fields = (options[kind] ?? ['card'])
       .map(
         (target) =>
-          `<label class="tk-border">${target === 'DEFAULT' ? 'Default' : target} ${kind}<input type="number" min="0" max="1000" step="${kind === 'radius' ? '.125' : '1'}" data-tk-border="${kind}" data-target="${target}">${kind === 'radius' ? 'rem' : 'px'}</label>`,
+          `<label class="tk-border"><span>${borderControlLabel(kind, target)}</span><span class="tk-border-field"><input type="number" min="0" max="1000" step="${kind === 'radius' ? '.125' : '1'}" data-tk-border="${kind}" data-target="${target}"><span aria-hidden="true">${borderControlUnit(kind)}</span></span></label>`,
       )
       .join('');
     provider
