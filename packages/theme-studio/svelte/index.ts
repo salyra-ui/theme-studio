@@ -23,3 +23,13 @@ export { default as ThemeSelect } from './ThemeSelect.svelte';
 export { default as ThemeExport } from './ThemeExport.svelte';
 
 export { default as ThemeName } from './ThemeName.svelte';
+
+export * from './picker-context';
+export { default as ThemePickerRoot } from './ThemePickerRoot.svelte';
+export { default as ThemeRoleTrigger } from './ThemeRoleTrigger.svelte';
+export { default as ThemePickerWheel } from './ThemePickerWheel.svelte';
+export { default as ThemeGeometryInput } from './ThemeGeometryInput.svelte';
+
+export { default as ThemeRoot } from './ThemeRoot.svelte';
+export { default as ThemeVariableScope } from './ThemeVariableScope.svelte';
+export * from './ThemeComposition';

@@ -1,0 +1,55 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import {
+  createThemeStore,
+  createThemePickerStore,
+  themePickerMarkers,
+  type Theme,
+  type Role,
+} from '../core';
+import {
+  surfaceStyles,
+  styleText,
+  createColorStore,
+  thumbPosition,
+} from '@salyra-ui/color-picker';
+interface Props extends HTMLAttributes<'div'> {
+  theme?: Theme;
+  roles?: readonly Role[];
+}
+const {
+  theme,
+  roles = ['primary', 'secondary', 'accent'],
+  style = '',
+  ...attributes
+} = Astro.props;
+const state = createThemePickerStore(createThemeStore({ theme }), {
+    roles,
+  }).getSnapshot(),
+  markers = themePickerMarkers(state);
+---
+
+<div
+  role="group"
+  tabindex="0"
+  aria-label="Theme colors"
+  {...attributes}
+  data-tk-control="wheel"
+  data-cp-part="surface"
+  style={`${styleText(surfaceStyles({ ...createColorStore().getSnapshot(), v: 100 }, 'wheel'))};${style}`}
+>
+  <slot>
+    {markers.map((marker) => (
+      <button
+        type="button"
+        class="cp-wheel-marker"
+        data-marker-id={marker.id}
+        data-cp-part="marker"
+        aria-label={marker.ariaLabel}
+        style={`${styleText(thumbPosition(marker.color, 'wheel'))};pointer-events:auto;background:${marker.color.hex}`}
+      >
+        {marker.label}
+      </button>
+    ))}
+  </slot>
+</div>

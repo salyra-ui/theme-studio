@@ -1,0 +1,11 @@
+---
+import type { ThemePickerOptions } from '../core';
+interface Props extends ThemePickerOptions {}
+---
+
+<tk-compose data-options={JSON.stringify(Astro.props)}>
+  <slot />
+</tk-compose>
+<script>
+  import './client';
+</script>

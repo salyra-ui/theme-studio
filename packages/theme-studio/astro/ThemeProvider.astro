@@ -1,14 +1,23 @@
 ---
 import { createThemeStore, type ThemeOptions } from '../core';
 import { scopeStyle } from './style';
-interface Props extends Omit<ThemeOptions, 'loadTheme' | 'storage' | 'modeStorage'> {
+interface Props extends Omit<
+  ThemeOptions,
+  'loadTheme' | 'storage' | 'modeStorage'
+> {
   src?: string;
   storageKey?: string;
   modeStorageKey?: string;
   modeStorage?: false;
   class?: string;
 }
-const { class: className = '', src, storageKey, modeStorageKey, ...options } = Astro.props;
+const {
+  class: className = '',
+  src,
+  storageKey,
+  modeStorageKey,
+  ...options
+} = Astro.props;
 // The function is only a loading-state marker on the server; fetch starts in the browser.
 const state = createThemeStore({
   ...options,

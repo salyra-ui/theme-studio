@@ -33,6 +33,7 @@ export interface ThemePickerStore {
   /** Start external theme synchronization on mount; cleanup is safe to remount. */
   mount(): () => void;
   setRoles(roles: readonly Role[]): void;
+  setDisabled(disabled: boolean): void;
   selectRole(role: Role): void;
   setView(view: ThemePickerView): void;
   setHSV(role: Role, hsv: Partial<HSV>): void;
@@ -51,6 +52,7 @@ export function createThemePickerStore(
       throw new TypeError('Select one or more unique theme roles');
     return Object.freeze([...values]);
   };
+  let disabledOverride = !!options.disabled;
   const colors = Object.fromEntries(
     allRoles.map((role) => [
       role,
@@ -58,7 +60,7 @@ export function createThemePickerStore(
         themeColor(theme.getSnapshot().theme, role),
         'hex',
         'area',
-        theme.getSnapshot().disabled || !!options.disabled,
+        theme.getSnapshot().disabled || disabledOverride,
       ),
     ]),
   ) as Record<Role, ColorStore>;
@@ -106,7 +108,7 @@ export function createThemePickerStore(
     syncing = true;
     try {
       for (const role of allRoles) {
-        const disabled = theme.getSnapshot().disabled || !!options.disabled;
+        const disabled = theme.getSnapshot().disabled || disabledOverride;
         if (colors[role].getSnapshot().disabled !== disabled) {
           colors[role].setDisabled(disabled);
           changed = true;
@@ -159,6 +161,10 @@ export function createThemePickerStore(
       };
     },
     selectRole,
+    setDisabled(disabled) {
+      disabledOverride = disabled;
+      sync();
+    },
     setRoles(values) {
       selected = validate(values);
       fieldRegistration?.update({ roles: selected });
