@@ -86,6 +86,49 @@ Astro receives serializable options. Its context component is `ThemeRoot.astro`,
 
 Vanilla supports `<tk-root>` and `<tk-scope>` for declarative composition. `<tk-provider>` remains the ready scope recipe over the same root lifecycle. `root.setStore(store, options)` binds an existing store. Ordinary HTML can use `mountThemeControls(element, store)` and `bindThemeScope(element, store)` independently.
 
+### An app theme with a separate draft
+
+Use one `ThemeProvider` for the application store. Nest `ThemeStudio.Root` with a **different store**, then put a `ThemeStudio.Scope` around the draft preview. A Scope by itself shares the nearest context and does not create separate state. Multiple scopes under the same Root all follow the same store.
+
+```svelte
+<script lang="ts">
+  import { onDestroy } from 'svelte';
+  import { ColorPicker } from '@salyra-ui/color-picker/svelte';
+  import {
+    ThemeProvider,
+    ThemeStudio,
+    createThemeStore,
+    createThemeEditor,
+    generateTheme,
+  } from '@salyra-ui/theme-studio/svelte';
+
+  const applied = createThemeStore({
+    theme: generateTheme('#5268E0'),
+    modeStorage: false,
+  });
+  const editor = createThemeEditor(applied);
+  onDestroy(() => editor.destroy());
+</script>
+
+<ThemeProvider store={applied} options={{ modeStorage: false }}>
+  <button style="background:hsl(var(--primary))">Applied theme</button>
+  <ThemeStudio.Root store={editor.store} options={{ modeStorage: false }}>
+    <ThemeStudio.Scope class="draft-preview">
+      <ThemeStudio.PickerRoot roles={['primary']}>
+        <label>Primary<ColorPicker.Input format="hex" /></label>
+      </ThemeStudio.PickerRoot>
+      <button style="background:hsl(var(--primary))">Draft theme</button>
+      <button onclick={() => editor.apply()}>Save</button>
+      <button onclick={() => editor.cancel()}>Cancel</button>
+    </ThemeStudio.Scope>
+  </ThemeStudio.Root>
+</ThemeProvider>
+```
+
+Save changes the applied store. Cancel restores the latest applied theme. Keep persistence on the applied store and Provider only. The example disables appearance storage in both scopes. `apply()` does not save to a backend. If a backend must accept the change first, save `editor.store.getSnapshot().theme` before applying. Handle an `apply()` conflict if the applied theme changed while the user was editing. `apply({ force: true })` explicitly overwrites that update.
+
+Create stores per mounted app or server request, rather than sharing user state through server module variables. [Complete nested draft recipes for all six adapters](https://salyra-ui.github.io/theme-studio/docs.html?kit=theme-studio#composition) include conflict feedback and owner cleanup.
+
 ## Install
 
 ```bash
