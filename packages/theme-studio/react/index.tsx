@@ -15,7 +15,7 @@ export { ThemeMode } from './ThemeMode';
 export { ThemeName } from './ThemeName';
 export { ThemePalette } from './ThemePalette';
 export { ThemePicker } from './ThemePicker';
-export { ThemeProvider } from './ThemeProvider';
+export { ThemeProvider, type ThemeProviderProps } from './ThemeProvider';
 export { ThemeRadius } from './ThemeRadius';
 export { ThemeReady } from './ThemeReady';
 export { ThemeSelect } from './ThemeSelect';

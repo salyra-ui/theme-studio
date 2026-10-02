@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { themeScopeStyle } from '../core';
 import { useTheme } from './context';
 const state = useTheme(),
   element = ref<HTMLDivElement>();
@@ -8,7 +9,7 @@ defineExpose({ element });
 </script>
 <template>
   <div
-    :style="state.style"
+    :style="themeScopeStyle(state)"
     v-bind="$attrs"
     ref="element"
     data-tk-part="scope"

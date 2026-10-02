@@ -1,31 +1,25 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
-import { createThemeStore, type ThemeOptions } from '../core';
+import type { AstroThemeOptions } from './options';
 interface Props extends HTMLAttributes<'div'> {
-  options?: Omit<ThemeOptions, 'loadTheme' | 'storage' | 'modeStorage'> & {
-    modeStorage?: false;
-  };
+  options?: AstroThemeOptions;
   src?: string;
 }
-const { options = {}, src, style = '', ...attributes } = Astro.props;
-const state = createThemeStore({
-  ...options,
-  loadTheme: src ? () => undefined : undefined,
-}).getSnapshot();
+const { options = {}, src, ...attributes } = Astro.props;
 ---
 
-<tk-provider
+<tk-root
   {...attributes}
-  data-config={JSON.stringify({ ...options, src })}
-  data-theme={state.theme.id}
-  data-mode={state.mode}
-  data-mode-preference={state.modePreference}
-  data-theme-status={state.status}
-  data-disabled={state.disabled}
-  style={`${state.style};${style}`}
+  data-config={JSON.stringify({ ...options, src: src ?? options.src })}
 >
   <slot />
-</tk-provider>
+</tk-root>
 <script>
   import './client';
 </script>
+
+<style is:global>
+  tk-root {
+    display: contents;
+  }
+</style>

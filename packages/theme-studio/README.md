@@ -61,6 +61,31 @@ Headless compositions require only your own CSS. Ready-made presets such as `The
 
 [Full examples for all six integrations](https://salyra-ui.github.io/theme-studio/docs.html?kit=theme-studio#composition)
 
+## Provider composition
+
+`ThemeProvider` is the ready composition of `ThemeRoot` and `ThemeVariableScope`. Root creates or receives the store and owns loading, storage, mode persistence and cleanup. Scope applies theme variables and state attributes. The ready provider adds a disabled controls boundary. All parts read the closest context.
+
+Use `ThemeStudio.Root` and `ThemeStudio.Scope` directly in React, Svelte or Vue when you want your own layout. Root renders no wrapper. You can place multiple Scopes under one Root. Angular uses `tkRoot` and `tkScope` directives on your own elements. Its ready provider uses those same directives.
+
+```tsx
+import { ThemeProvider, generateTheme } from '@salyra-ui/theme-studio/react';
+
+<ThemeProvider
+  theme={generateTheme('#5268E0')}
+  modeStorage={false}
+  className="app-theme"
+  scopeProps={{ id: 'app-theme', 'aria-label': 'Themed application' }}
+>
+  <Application />
+</ThemeProvider>;
+```
+
+Svelte and Vue forward native attributes to the scope. React and Svelte expose the scope element with `ref` and `bind:ref`. Use store methods for updates after initialization.
+
+Astro receives serializable options. Its context component is `ThemeRoot.astro`, and its CSS boundary is `ThemeVariableScope.astro`. Pass the same `options` to both to seed matching server output. `ThemeProvider.astro` does this for you. Fetch starts in the browser and loading content is visible in the server output when a request or cache is pending.
+
+Vanilla supports `<tk-root>` and `<tk-scope>` for declarative composition. `<tk-provider>` remains the ready scope recipe over the same root lifecycle. `root.setStore(store, options)` binds an existing store. Ordinary HTML can use `mountThemeControls(element, store)` and `bindThemeScope(element, store)` independently.
+
 ## Install
 
 ```bash

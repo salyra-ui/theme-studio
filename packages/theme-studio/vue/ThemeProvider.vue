@@ -1,37 +1,12 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue';
-import {
-  createThemeStore,
-  mountThemeStore,
-  type ThemeStore,
-  type ThemeOptions,
-} from '../core';
-import { provideTheme, watchTheme } from './context';
-const props = defineProps<{ options?: ThemeOptions; store?: ThemeStore }>();
-const store = provideTheme(props.store ?? createThemeStore(props.options)),
-  theme = watchTheme(store);
-let cleanup: (() => void) | undefined;
-onMounted(() => {
-  cleanup = mountThemeStore(store, props.options?.storage, props.options);
-});
-onBeforeUnmount(() => cleanup?.());
+import type { ThemeOptions, ThemeStore } from '../core';
+import ThemeRoot from './ThemeRoot.vue';
+import ThemeProviderContent from './ThemeProviderContent.vue';
+defineOptions({ inheritAttrs: false });
+defineProps<{ options?: ThemeOptions; store?: ThemeStore }>();
 </script>
 <template>
-  <div
-    class="tk-scope"
-    :data-disabled="theme.disabled"
-    :data-theme="theme.theme.id"
-    :data-mode="theme.mode"
-    :data-theme-status="theme.status"
-    :style="theme.style"
-  >
-    <fieldset
-      class="tk-provider-controls"
-      :disabled="theme.disabled"
-      :inert="theme.disabled"
-      :aria-disabled="theme.disabled"
-    >
-      <slot />
-    </fieldset>
-  </div>
+  <ThemeRoot :store="store" :options="options">
+    <ThemeProviderContent v-bind="$attrs"><slot /></ThemeProviderContent>
+  </ThemeRoot>
 </template>

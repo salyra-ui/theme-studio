@@ -1,5 +1,5 @@
 import { mountThemeControls } from './composition';
-import type { ThemeProviderElement } from './elements';
+import { themeRootSelector, type ThemeRootElement } from './root';
 import type { ThemePickerOptions, ThemePickerStore, ThemeStore } from '../core';
 export class ThemeCompositionElement extends HTMLElement {
   picker?: ThemePickerStore;
@@ -8,7 +8,7 @@ export class ThemeCompositionElement extends HTMLElement {
   private stop?: () => void;
   private detach?: () => void;
   connectedCallback() {
-    const root = this.closest<ThemeProviderElement>('tk-provider');
+    const root = this.closest<ThemeRootElement>(themeRootSelector);
     if (!root) return;
     const setup = () => {
       if (!root.store) return;

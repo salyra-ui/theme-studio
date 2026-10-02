@@ -28,6 +28,7 @@ import {
   type Target,
   type ThemeOptions,
   themePickerMarkers,
+  themeScopeStyles,
   type ThemePickerOptions,
   type ThemePickerStore,
   type ThemeStore,
@@ -206,18 +207,10 @@ export const ThemeVariableScope = forwardRef<
 >(function ThemeVariableScope({ style, ...attributes }, ref) {
   const state = useTheme();
   const variables = Object.fromEntries(
-    state.style
-      .split(';')
-      .filter(Boolean)
-      .map((part) => {
-        const i = part.indexOf(':');
-        return [
-          part.slice(0, i) === 'color-scheme'
-            ? 'colorScheme'
-            : part.slice(0, i),
-          part.slice(i + 1),
-        ];
-      }),
+    Object.entries(themeScopeStyles(state)).map(([key, value]) => [
+      key === 'color-scheme' ? 'colorScheme' : key,
+      value,
+    ]),
   );
   return (
     <div

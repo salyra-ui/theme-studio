@@ -15,6 +15,7 @@ import { ThemeContext, useTheme, useThemeStore } from './context';
 import {
   createThemeStore,
   mountThemeStore,
+  themeScopeStyles,
   createThemePickerStore,
   bindBorderInput,
   type ThemeStore,
@@ -36,19 +37,21 @@ export class ThemeRoot implements OnInit {
   @Input() options: ThemeOptions = {};
   private context = inject(ThemeContext);
   private stop?: () => void;
+  private initial: ThemeOptions = {};
   constructor() {
     afterNextRender(
       () =>
         (this.stop = mountThemeStore(
           this.context.store,
-          this.options.storage,
-          this.options,
+          this.initial.storage,
+          this.initial,
         )),
     );
     inject(DestroyRef).onDestroy(() => this.stop?.());
   }
   ngOnInit() {
-    this.context.configure(this.store ?? createThemeStore(this.options));
+    this.initial = this.options;
+    this.context.configure(this.store ?? createThemeStore(this.initial));
   }
 }
 @Directive({
@@ -59,6 +62,7 @@ export class ThemeRoot implements OnInit {
     '[attr.data-mode]': 'state().mode',
     '[attr.data-mode-preference]': 'state().modePreference',
     '[attr.data-theme]': 'state().theme.id',
+    '[attr.data-theme-status]': 'state().status',
     '[attr.data-disabled]': 'state().disabled',
   },
 })
@@ -68,11 +72,10 @@ export class ThemeVariableScope {
   private node = inject(ElementRef<HTMLElement>).nativeElement;
   constructor() {
     const render = () => {
-      for (const part of this.store.getSnapshot().style.split(';')) {
-        const i = part.indexOf(':');
-        if (i > 0)
-          this.node.style.setProperty(part.slice(0, i), part.slice(i + 1));
-      }
+      for (const [key, value] of Object.entries(
+        themeScopeStyles(this.store.getSnapshot()),
+      ))
+        this.node.style.setProperty(key, value);
     };
     render();
     inject(DestroyRef).onDestroy(this.store.subscribe(render));
