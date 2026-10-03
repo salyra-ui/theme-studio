@@ -8,7 +8,9 @@ Theme generation and composition, depending on color-picker. Optional fetching a
 
 ## V1 composition
 
-Version 1.0.0 is being developed on `composable-primitives`. The examples in this section use that branch.
+![Custom v1 theme-studio composition](https://salyra-ui.github.io/theme-studio/npm/theme-studio-composition.jpg)
+
+Version 1.0.0 separates context and behavior from your editor markup. The examples below use the published composition API.
 
 `ThemeStudio.Root` owns theme state and lifecycle. `ThemeStudio.Scope` applies CSS variables where you need them. `ThemeStudio.PickerRoot` connects selected theme roles to Color Picker controls. These are separate responsibilities, so the context can live above an editor without forcing its layout or styling every child.
 
