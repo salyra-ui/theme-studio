@@ -354,3 +354,19 @@ Current complete themes and partial configuration exports use `schemaVersion: 1`
 ## Editor control styling
 
 Use `--tk-control-height`, `--tk-control-radius`, `--tk-control-border`, `--tk-focus-color` and `--tk-gap` on the editor wrapper. These style editor controls independently of generated radius and border-width tokens. Geometry inputs keep an incomplete draft while focused and write only valid values from 0 to 1000. Blur, Enter or Escape restores the current stored value. Radius uses rem and width uses px. Vanilla provider updates preserve unrelated inline styles and custom control variables.
+
+## Sample the active theme color
+
+With Color Picker 1.0.1, place `ColorPicker.EyeDropper` inside `ThemeStudio.PickerRoot`, next to your active color fields. It uses the selected role's color context, so sampling updates that role only. Role selection, geometry and other colors stay unchanged. The button is optional and accepts your content and classes.
+
+```tsx
+<ThemeStudio.PickerRoot roles={['primary', 'accent']}>
+  <ThemeStudio.RoleTrigger role="primary">Brand</ThemeStudio.RoleTrigger>
+  <ThemeStudio.RoleTrigger role="accent">Highlight</ThemeStudio.RoleTrigger>
+  <ColorPicker.EyeDropper className="sample-button">
+    Sample active color
+  </ColorPicker.EyeDropper>
+</ThemeStudio.PickerRoot>
+```
+
+Import `ColorPicker` from `@salyra-ui/color-picker/react` and `ThemeStudio` from `@salyra-ui/theme-studio/react`. Mount the picker inside a theme Root or Provider. See the [Color Picker reference](https://salyra-ui.github.io/color-picker/docs.html?kit=color-picker#api-coloreyedropper) for sampling support, cancellation and the other framework adapters.
