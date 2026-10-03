@@ -141,3 +141,6 @@ export function themePaletteMarkup(
   const classes = options.classes ?? {};
   return `<tk-palette role-name="${role}"><div class="tk-palette ${escape(classes.root ?? '')}" data-shape="${options.shape ?? 'square'}" aria-label="${role} shades">${shades.map((shade) => `<div data-palette-part="item" class="${escape(classes.item ?? '')} ${escape(options.shadeClasses?.[shade] ?? '')}"><span data-palette-part="label" class="${escape(classes.label ?? '')}">${escape(options.labels?.[shade] ?? shade)}</span><div data-palette-part="swatch" data-shade="${shade}" class="tk-shade ${escape(classes.swatch ?? '')}"></div></div>`).join('')}</div></tk-palette>`;
 }
+
+export * from './composition';
+export * from './composition-element';

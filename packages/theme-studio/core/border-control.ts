@@ -30,8 +30,13 @@ export function bindBorderInput(
     );
     input.setAttribute('aria-invalid', 'false');
   };
-  const change = () => {
-    if (store.getSnapshot().disabled) return;
+  const change = (event: Event) => {
+    if (
+      event.defaultPrevented ||
+      input.disabled ||
+      store.getSnapshot().disabled
+    )
+      return;
     const value = input.valueAsNumber;
     const valid =
       input.value !== '' &&

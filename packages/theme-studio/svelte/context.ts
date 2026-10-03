@@ -20,8 +20,20 @@ export function useTheme() {
 
 export function useThemeMode() {
   const store = useThemeStore();
-  return { ...themeModeActions(store), subscribe(run: (state: { preference: ReturnType<ThemeStore['getSnapshot']>['modePreference']; resolvedMode: ReturnType<ThemeStore['getSnapshot']>['mode'] }) => void) {
-    const update = () => { const state = store.getSnapshot(); run({ preference: state.modePreference, resolvedMode: state.mode }); };
-    update(); return store.subscribe(update);
-  } };
+  return {
+    ...themeModeActions(store),
+    subscribe(
+      run: (state: {
+        preference: ReturnType<ThemeStore['getSnapshot']>['modePreference'];
+        resolvedMode: ReturnType<ThemeStore['getSnapshot']>['mode'];
+      }) => void,
+    ) {
+      const update = () => {
+        const state = store.getSnapshot();
+        run({ preference: state.modePreference, resolvedMode: state.mode });
+      };
+      update();
+      return store.subscribe(update);
+    },
+  };
 }

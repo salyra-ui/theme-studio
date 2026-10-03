@@ -23,3 +23,13 @@ export { default as ThemeSelect } from './ThemeSelect.vue';
 export { default as ThemeExport } from './ThemeExport.vue';
 
 export { default as ThemeName } from './ThemeName.vue';
+
+export * from './picker-context';
+export { default as ThemePickerRoot } from './ThemePickerRoot.vue';
+export { default as ThemeRoleTrigger } from './ThemeRoleTrigger.vue';
+export { default as ThemePickerWheel } from './ThemePickerWheel.vue';
+export { default as ThemeGeometryInput } from './ThemeGeometryInput.vue';
+
+export { default as ThemeRoot } from './ThemeRoot.vue';
+export { default as ThemeVariableScope } from './ThemeVariableScope.vue';
+export * from './ThemeComposition';

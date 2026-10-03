@@ -1,0 +1,18 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import type { Role } from '../core';
+interface Props extends Omit<HTMLAttributes<'button'>, 'role'> {
+  role: Role;
+}
+const { role, ...attributes } = Astro.props;
+---
+
+<button
+  type="button"
+  {...attributes}
+  data-tk-part="role-trigger"
+  data-tk-control="role"
+  data-role={role}
+>
+  <slot>{role}</slot>
+</button>

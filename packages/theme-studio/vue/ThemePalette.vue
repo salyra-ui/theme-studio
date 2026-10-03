@@ -1,13 +1,22 @@
 <script setup lang="ts">
 import { shades, type Role, type PaletteClasses, type Shade } from '../core';
 import { useTheme } from './context';
-withDefaults(defineProps<{ role?: Role; shape?: 'square' | 'circle' | 'joined'; classes?: PaletteClasses; labels?: Partial<Record<Shade, string>>; shadeClasses?: Partial<Record<Shade, string>> }>(), {
-  role: 'primary',
-  shape: 'square',
-  classes: () => ({}),
-  labels: () => ({}),
-  shadeClasses: () => ({}),
-});
+withDefaults(
+  defineProps<{
+    role?: Role;
+    shape?: 'square' | 'circle' | 'joined';
+    classes?: PaletteClasses;
+    labels?: Partial<Record<Shade, string>>;
+    shadeClasses?: Partial<Record<Shade, string>>;
+  }>(),
+  {
+    role: 'primary',
+    shape: 'square',
+    classes: () => ({}),
+    labels: () => ({}),
+    shadeClasses: () => ({}),
+  },
+);
 const theme = useTheme();
 </script>
 <template>

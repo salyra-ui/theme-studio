@@ -1,0 +1,25 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import type { AstroThemeOptions } from './options';
+interface Props extends HTMLAttributes<'div'> {
+  options?: AstroThemeOptions;
+  src?: string;
+}
+const { options = {}, src, ...attributes } = Astro.props;
+---
+
+<tk-root
+  {...attributes}
+  data-config={JSON.stringify({ ...options, src: src ?? options.src })}
+>
+  <slot />
+</tk-root>
+<script>
+  import './client';
+</script>
+
+<style is:global>
+  tk-root {
+    display: contents;
+  }
+</style>

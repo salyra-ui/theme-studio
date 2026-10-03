@@ -1,45 +1,25 @@
 <script lang="ts">
-  import { onMount, untrack, type Snippet } from 'svelte';
-  import {
-    createThemeStore,
-    mountThemeStore,
-    type ThemeOptions,
-    type ThemeStore,
-  } from '../core';
-  import { provideTheme, useTheme } from './context';
+  import type { Snippet } from 'svelte';
+  import type { HTMLAttributes } from 'svelte/elements';
+  import type { ThemeOptions, ThemeStore } from '../core';
+  import ThemeRoot from './ThemeRoot.svelte';
+  import ThemeProviderContent from './ThemeProviderContent.svelte';
   let {
     children,
     options = {},
-    store: provided,
-    class: className = '',
-  }: {
+    store,
+    ref = $bindable(),
+    ...attributes
+  }: HTMLAttributes<HTMLDivElement> & {
     children: Snippet;
     options?: ThemeOptions;
     store?: ThemeStore;
-    class?: string;
+    ref?: HTMLDivElement;
   } = $props();
-  const store = provideTheme(
-      untrack(() => provided ?? createThemeStore(options)),
-    ),
-    theme = useTheme();
-  onMount(() => mountThemeStore(store, options.storage, options));
 </script>
 
-<div
-  class="tk-scope {className}"
-  data-disabled={$theme.disabled}
-  data-theme={$theme.theme.id}
-  data-mode={$theme.mode}
-  data-mode-preference={$theme.modePreference}
-  data-theme-status={$theme.status}
-  style={$theme.style}
->
-  <fieldset
-    class="tk-provider-controls"
-    disabled={$theme.disabled}
-    inert={$theme.disabled}
-    aria-disabled={$theme.disabled}
+<ThemeRoot {store} {options}>
+  <ThemeProviderContent {...attributes} bind:ref
+    >{@render children()}</ThemeProviderContent
   >
-    {@render children()}
-  </fieldset>
-</div>
+</ThemeRoot>

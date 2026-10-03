@@ -1,0 +1,51 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { astroThemeSnapshot, type AstroThemeOptions } from './options';
+import { scopeStyle } from './style';
+interface Props extends HTMLAttributes<'div'> {
+  /** Match Root options for the initial server render. The browser reads the nearest Root. */
+  options?: AstroThemeOptions;
+  controlsBoundary?: boolean;
+}
+const {
+  options = {},
+  controlsBoundary = false,
+  style = '',
+  ...attributes
+} = Astro.props;
+const state = astroThemeSnapshot(options);
+---
+
+<tk-scope
+  {...attributes}
+  data-tk-part="scope"
+  data-controls-boundary={controlsBoundary ? '' : undefined}
+  data-theme={state.theme.id}
+  data-mode={state.mode}
+  data-mode-preference={state.modePreference}
+  data-theme-status={state.status}
+  data-disabled={state.disabled}
+  inert={controlsBoundary && state.disabled ? '' : undefined}
+  aria-disabled={controlsBoundary ? state.disabled : undefined}
+  style={`${scopeStyle(state)};${style}`}
+>
+  <slot />
+</tk-scope>
+<script>
+  import './client';
+</script>
+
+<style is:global>
+  tk-scope {
+    display: block;
+  }
+  tk-loading {
+    display: var(--tk-loading-display, none);
+  }
+  tk-error {
+    display: var(--tk-error-display, none);
+  }
+  tk-ready {
+    display: var(--tk-ready-display, contents);
+  }
+</style>

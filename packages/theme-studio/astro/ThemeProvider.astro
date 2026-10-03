@@ -1,55 +1,29 @@
 ---
-import { createThemeStore, type ThemeOptions } from '../core';
-import { scopeStyle } from './style';
-interface Props extends Omit<ThemeOptions, 'loadTheme' | 'storage' | 'modeStorage'> {
-  src?: string;
-  storageKey?: string;
-  modeStorageKey?: string;
-  modeStorage?: false;
+import type { HTMLAttributes } from 'astro/types';
+import type { AstroThemeOptions } from './options';
+import ThemeRoot from './ThemeRoot.astro';
+import ThemeVariableScope from './ThemeVariableScope.astro';
+interface Props extends AstroThemeOptions {
   class?: string;
+  style?: string;
+  scopeProps?: HTMLAttributes<'div'>;
 }
-const { class: className = '', src, storageKey, modeStorageKey, ...options } = Astro.props;
-// The function is only a loading-state marker on the server; fetch starts in the browser.
-const state = createThemeStore({
-  ...options,
-  loadTheme: src ? () => undefined : undefined,
-  storage: storageKey ? { read: () => null, write: () => {} } : undefined,
-}).getSnapshot();
+const {
+  class: className = '',
+  style = '',
+  scopeProps = {},
+  ...options
+} = Astro.props;
 ---
 
-<tk-provider
-  class:list={['tk-scope', className]}
-  data-config={JSON.stringify({ ...options, src, storageKey, modeStorageKey })}
-  data-disabled={state.disabled}
-  inert={state.disabled}
-  aria-disabled={state.disabled}
-  data-theme={state.theme.id}
-  data-mode={state.mode}
-  data-mode-preference={state.modePreference}
-  data-theme-status={state.status}
-  style={scopeStyle(state)}
->
-  <slot />
-</tk-provider>
-<script>
-  import './client';
-</script>
-<style is:global>
-  tk-provider,
-  tk-palette,
-  cp-provider,
-  cp-area,
-  cp-slider,
-  cp-input {
-    display: block;
-  }
-  tk-loading {
-    display: var(--tk-loading-display, none);
-  }
-  tk-error {
-    display: var(--tk-error-display, none);
-  }
-  tk-ready {
-    display: var(--tk-ready-display, contents);
-  }
-</style>
+<ThemeRoot {options}>
+  <ThemeVariableScope
+    {...scopeProps}
+    {options}
+    controlsBoundary
+    class:list={['tk-scope', scopeProps.class, className]}
+    style={`${scopeProps.style ?? ''};${style}`}
+  >
+    <slot />
+  </ThemeVariableScope>
+</ThemeRoot>

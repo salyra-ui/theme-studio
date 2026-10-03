@@ -1,0 +1,34 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import {
+  generateTheme,
+  type Theme,
+  type BorderKind,
+  type Target,
+} from '../core';
+interface Props extends HTMLAttributes<'input'> {
+  kind?: BorderKind;
+  target?: Target;
+  theme?: Theme;
+}
+const {
+  kind = 'radius',
+  target = 'DEFAULT',
+  theme = generateTheme('#6366F1'),
+  ...attributes
+} = Astro.props;
+---
+
+<input
+  type="number"
+  min="0"
+  max="1000"
+  step={kind === 'radius' ? 0.125 : 1}
+  aria-label={`${target} ${kind}`}
+  value={theme.structure.websitePreset.border[kind][target]}
+  {...attributes}
+  data-tk-control="geometry"
+  data-tk-part="geometry-input"
+  data-kind={kind}
+  data-target={target}
+/>

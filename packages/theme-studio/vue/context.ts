@@ -32,6 +32,11 @@ export function useTheme() {
 }
 
 export function useThemeMode() {
-  const store = useThemeStore(), state = watchTheme(store);
-  return { preference: computed(() => state.value.modePreference), resolvedMode: computed(() => state.value.mode), ...themeModeActions(store) };
+  const store = useThemeStore(),
+    state = watchTheme(store);
+  return {
+    preference: computed(() => state.value.modePreference),
+    resolvedMode: computed(() => state.value.mode),
+    ...themeModeActions(store),
+  };
 }

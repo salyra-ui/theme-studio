@@ -1,18 +1,41 @@
 ---
-import { defaultTheme, shades, type Theme, type Role, type PaletteOptions } from '../core';
+import {
+  defaultTheme,
+  shades,
+  type Theme,
+  type Role,
+  type PaletteOptions,
+} from '../core';
 interface Props extends PaletteOptions {
   class?: string;
   theme?: Theme;
   role?: Role;
 }
-const { theme = defaultTheme, role = 'primary', shape = 'square', classes = {}, labels = {}, shadeClasses = {}, class: className = '' } = Astro.props;
+const {
+  theme = defaultTheme,
+  role = 'primary',
+  shape = 'square',
+  classes = {},
+  labels = {},
+  shadeClasses = {},
+  class: className = '',
+} = Astro.props;
 ---
 
 <tk-palette role-name={role}>
-  <div class:list={['tk-palette', classes.root, className]} data-shape={shape} aria-label={`${role} shades`}>
+  <div
+    class:list={['tk-palette', classes.root, className]}
+    data-shape={shape}
+    aria-label={`${role} shades`}
+  >
     {shades.map((shade) => (
-      <div data-palette-part="item" class:list={[classes.item, shadeClasses[shade]]}>
-        <span data-palette-part="label" class={classes.label}>{labels[shade] ?? shade}</span>
+      <div
+        data-palette-part="item"
+        class:list={[classes.item, shadeClasses[shade]]}
+      >
+        <span data-palette-part="label" class={classes.label}>
+          {labels[shade] ?? shade}
+        </span>
         <div
           data-shade={shade}
           data-palette-part="swatch"

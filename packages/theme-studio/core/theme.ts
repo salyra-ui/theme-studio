@@ -95,8 +95,15 @@ export function generateTheme(
     backgroundMode,
     harmony,
     id: options.id ?? `custom-${seed.slice(1).toLowerCase()}`,
-    name: options.name ?? (options.base?.nameSource === 'custom' ? options.base.name : getColorName(seed)),
-    nameSource: options.name !== undefined || options.base?.nameSource === 'custom' ? 'custom' : 'suggested',
+    name:
+      options.name ??
+      (options.base?.nameSource === 'custom'
+        ? options.base.name
+        : getColorName(seed)),
+    nameSource:
+      options.name !== undefined || options.base?.nameSource === 'custom'
+        ? 'custom'
+        : 'suggested',
     structure: { userPreset, websitePreset },
   });
 }
@@ -119,7 +126,11 @@ function channels(v: unknown): string {
 /** Validate, copy and freeze at trust boundaries; strip unknown keys. */
 export function parseTheme(value: unknown): Theme {
   const t = object(value);
-  if (t.schemaVersion !== undefined && t.schemaVersion !== 0 && t.schemaVersion !== 1)
+  if (
+    t.schemaVersion !== undefined &&
+    t.schemaVersion !== 0 &&
+    t.schemaVersion !== 1
+  )
     throw new TypeError('Unsupported theme schema version');
   if (
     typeof t.id !== 'string' ||
@@ -136,7 +147,10 @@ export function parseTheme(value: unknown): Theme {
     throw new TypeError('Invalid background mode');
   if (t.harmony !== undefined && !harmonies.includes(t.harmony as Harmony))
     throw new TypeError('Invalid harmony');
-  if (t.nameSource !== undefined && !['suggested', 'custom'].includes(String(t.nameSource)))
+  if (
+    t.nameSource !== undefined &&
+    !['suggested', 'custom'].includes(String(t.nameSource))
+  )
     throw new TypeError('Invalid theme name source');
   const structure = object(t.structure),
     user = object(structure.userPreset),

@@ -6,6 +6,131 @@ Theme generation and composition, depending on color-picker. Optional fetching a
 
 ![Custom shade labels and joined swatches](https://salyra-ui.github.io/theme-studio/npm/theme-studio-swatches.jpg)
 
+## V1 composition
+
+![Custom v1 theme-studio composition](https://salyra-ui.github.io/theme-studio/npm/theme-studio-composition.jpg)
+
+Version 1.0.0 separates context and behavior from your editor markup. The examples below use the published composition API.
+
+`ThemeStudio.Root` owns theme state and lifecycle. `ThemeStudio.Scope` applies CSS variables where you need them. `ThemeStudio.PickerRoot` connects selected theme roles to Color Picker controls. These are separate responsibilities, so the context can live above an editor without forcing its layout or styling every child.
+
+```tsx
+import { ColorPicker } from '@salyra-ui/color-picker/react';
+import { ThemeStudio, ThemeExport } from '@salyra-ui/theme-studio/react';
+import { createThemeStore, generateTheme } from '@salyra-ui/theme-studio';
+
+const store = createThemeStore({
+  theme: generateTheme('#5268E0'),
+  mode: 'dark',
+  selection: {
+    roles: ['primary', 'accent'],
+    radius: ['card'],
+    width: ['button'],
+  },
+});
+
+<ThemeStudio.Root store={store}>
+  <ThemeStudio.Scope className="theme-preview">
+    <ThemeStudio.PickerRoot roles={['primary', 'accent']}>
+      <ThemeStudio.RoleTrigger role="primary">
+        Brand color
+      </ThemeStudio.RoleTrigger>
+      <ThemeStudio.RoleTrigger role="accent">Highlight</ThemeStudio.RoleTrigger>
+      <ThemeStudio.Wheel className="theme-wheel" />
+      <ColorPicker.Slider channel="v" aria-label="Brightness" />
+      <ColorPicker.Input format="hex" />
+      <label>
+        Card corners in rem
+        <ThemeStudio.GeometryInput kind="radius" target="card" />
+      </label>
+      <label>
+        Button border in px
+        <ThemeStudio.GeometryInput kind="width" target="button" />
+      </label>
+      <ThemeExport />
+    </ThemeStudio.PickerRoot>
+  </ThemeStudio.Scope>
+</ThemeStudio.Root>;
+```
+
+Create a store per component or server request. Set an explicit selection when the server-rendered export must already contain only those tokens. After mounting, picker roots and geometry inputs register their own roles and targets. Unmounting a part removes its field registration. `themeConfiguration(store.getSnapshot())` returns the selected configuration, JSON and CSS without requiring an export component.
+
+The shared wheel uses the Color Picker surface and marker behavior. For a custom marker, compose `ColorPicker.Marker` inside `ThemeStudio.Wheel` and use `useThemePicker()` to read its marker data. Its position and color come from the selected role, while its label, shape and classes belong to the application. A single-role wheel can use a small unlabeled thumb.
+
+React, Svelte and Vue expose the composition object and individual parts. Angular exposes native directives `tkRoot`, `tkScope`, `tkPickerRoot`, `tkRoleTrigger` and `tkGeometry`. Astro uses individual components, with an explicit initial theme for server-rendered controls. For Vanilla, `mountThemeControls(root, store, options)` connects existing HTML and returns the picker, configuration reader and cleanup function. `bindThemeScope(element, store)` applies the theme variables separately.
+
+Headless compositions require only your own CSS. Ready-made presets such as `ThemePicker`, `ThemePalette` and `ThemeExport` use the optional package stylesheet. The package CSS includes the Color Picker preset styles.
+
+[Full examples for all six integrations](https://salyra-ui.github.io/theme-studio/docs.html?kit=theme-studio#composition)
+
+## Provider composition
+
+`ThemeProvider` is the ready composition of `ThemeRoot` and `ThemeVariableScope`. Root creates or receives the store and owns loading, storage, mode persistence and cleanup. Scope applies theme variables and state attributes. The ready provider adds a disabled controls boundary. All parts read the closest context.
+
+Use `ThemeStudio.Root` and `ThemeStudio.Scope` directly in React, Svelte or Vue when you want your own layout. Root renders no wrapper. You can place multiple Scopes under one Root. Angular uses `tkRoot` and `tkScope` directives on your own elements. Its ready provider uses those same directives.
+
+```tsx
+import { ThemeProvider, generateTheme } from '@salyra-ui/theme-studio/react';
+
+<ThemeProvider
+  theme={generateTheme('#5268E0')}
+  modeStorage={false}
+  className="app-theme"
+  scopeProps={{ id: 'app-theme', 'aria-label': 'Themed application' }}
+>
+  <Application />
+</ThemeProvider>;
+```
+
+Svelte and Vue forward native attributes to the scope. React and Svelte expose the scope element with `ref` and `bind:ref`. Use store methods for updates after initialization.
+
+Astro receives serializable options. Its context component is `ThemeRoot.astro`, and its CSS boundary is `ThemeVariableScope.astro`. Pass the same `options` to both to seed matching server output. `ThemeProvider.astro` does this for you. Fetch starts in the browser and loading content is visible in the server output when a request or cache is pending.
+
+Vanilla supports `<tk-root>` and `<tk-scope>` for declarative composition. `<tk-provider>` remains the ready scope recipe over the same root lifecycle. `root.setStore(store, options)` binds an existing store. Ordinary HTML can use `mountThemeControls(element, store)` and `bindThemeScope(element, store)` independently.
+
+### An app theme with a separate draft
+
+Use one `ThemeProvider` for the application store. Nest `ThemeStudio.Root` with a **different store**, then put a `ThemeStudio.Scope` around the draft preview. A Scope by itself shares the nearest context and does not create separate state. Multiple scopes under the same Root all follow the same store.
+
+```svelte
+<script lang="ts">
+  import { onDestroy } from 'svelte';
+  import { ColorPicker } from '@salyra-ui/color-picker/svelte';
+  import {
+    ThemeProvider,
+    ThemeStudio,
+    createThemeStore,
+    createThemeEditor,
+    generateTheme,
+  } from '@salyra-ui/theme-studio/svelte';
+
+  const applied = createThemeStore({
+    theme: generateTheme('#5268E0'),
+    modeStorage: false,
+  });
+  const editor = createThemeEditor(applied);
+  onDestroy(() => editor.destroy());
+</script>
+
+<ThemeProvider store={applied} options={{ modeStorage: false }}>
+  <button style="background:hsl(var(--primary))">Applied theme</button>
+  <ThemeStudio.Root store={editor.store} options={{ modeStorage: false }}>
+    <ThemeStudio.Scope class="draft-preview">
+      <ThemeStudio.PickerRoot roles={['primary']}>
+        <label>Primary<ColorPicker.Input format="hex" /></label>
+      </ThemeStudio.PickerRoot>
+      <button style="background:hsl(var(--primary))">Draft theme</button>
+      <button onclick={() => editor.apply()}>Save</button>
+      <button onclick={() => editor.cancel()}>Cancel</button>
+    </ThemeStudio.Scope>
+  </ThemeStudio.Root>
+</ThemeProvider>
+```
+
+Save changes the applied store. Cancel restores the latest applied theme. Keep persistence on the applied store and Provider only. The example disables appearance storage in both scopes. `apply()` does not save to a backend. If a backend must accept the change first, save `editor.store.getSnapshot().theme` before applying. Handle an `apply()` conflict if the applied theme changed while the user was editing. `apply({ force: true })` explicitly overwrites that update.
+
+Create stores per mounted app or server request, rather than sharing user state through server module variables. [Complete nested draft recipes for all six adapters](https://salyra-ui.github.io/theme-studio/docs.html?kit=theme-studio#composition) include conflict feedback and owner cleanup.
+
 ## Install
 
 ```bash
@@ -74,7 +199,10 @@ React/Svelte/Vue use `ThemePicker`; Angular exposes `tk-picker` with `[roles]`, 
     ThemeSelect,
     ThemeExport,
   } from '@salyra-ui/theme-studio/svelte';
-  import { generateTheme, type ThemeConfiguration } from '@salyra-ui/theme-studio';
+  import {
+    generateTheme,
+    type ThemeConfiguration,
+  } from '@salyra-ui/theme-studio';
   const themes = [generateTheme('#6366f1'), generateTheme('#ef6b52')];
   let configured = $state<ThemeConfiguration>();
 </script>
@@ -204,8 +332,11 @@ If the applied theme changes while the draft has edits, `conflict` becomes true.
 import { themeTailwind } from '@salyra-ui/theme-studio';
 const css = themeTailwind(store.getSnapshot(), {
   selection: {
-    roles: ['primary'], radius: ['card'], width: ['button'],
-    background: true, modes: ['light', 'dark'],
+    roles: ['primary'],
+    radius: ['card'],
+    width: ['button'],
+    background: true,
+    modes: ['light', 'dark'],
   },
   selector: '.app-theme',
   darkSelector: '.app-theme[data-mode="dark"]',

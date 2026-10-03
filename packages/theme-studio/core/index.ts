@@ -11,3 +11,6 @@ export * from './mode';
 export * from './session';
 export * from './collection';
 export * from './contrast';
+
+export * from './border-control';
+export * from './scope';

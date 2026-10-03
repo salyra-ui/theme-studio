@@ -1,6 +1,6 @@
 {
   "name": "@salyra-ui/theme-studio",
-  "version": "0.3.1",
+  "version": "1.0.0",
   "type": "module",
   "private": true,
   "sideEffects": [
@@ -56,7 +56,7 @@
     }
   },
   "dependencies": {
-    "@salyra-ui/color-picker": "0.3.1"
+    "@salyra-ui/color-picker": "1.0.0"
   },
   "homepage": "https://salyra-ui.github.io/theme-studio/docs.html?kit=theme-studio"
 }
